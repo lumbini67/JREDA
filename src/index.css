@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* JREDA Solar Energy Monitoring Platform - Design System */
+
+@layer base {
+  :root {
+    /* Core Colors - Clean Energy Theme */
+    --background: 150 20% 98%;
+    --foreground: 160 30% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 30% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 30% 12%;
+
+    /* Primary - Forest Green (Renewable Energy) */
+    --primary: 152 45% 28%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Soft Sage */
+    --secondary: 150 25% 94%;
+    --secondary-foreground: 152 45% 28%;
+
+    /* Muted */
+    --muted: 150 15% 92%;
+    --muted-foreground: 160 15% 45%;
+
+    /* Accent - Solar Amber */
+    --accent: 38 92% 50%;
+    --accent-foreground: 38 95% 15%;
+
+    /* Status Colors */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 95% 15%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 150 20% 88%;
+    --input: 150 20% 88%;
+    --ring: 152 45% 28%;
+
+    --radius: 0.75rem;
+
+    /* Custom Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(152, 45%, 28%) 0%, hsl(168, 50%, 35%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(28, 95%, 55%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(150, 20%, 98%) 0%, hsl(150, 25%, 94%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    --gradient-solar: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(25, 95%, 55%) 50%, hsl(152, 45%, 28%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(160 30% 12% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(160 30% 12% / 0.08), 0 2px 4px -2px hsl(160 30% 12% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(160 30% 12% / 0.1), 0 4px 6px -4px hsl(160 30% 12% / 0.05);
+    --shadow-glow: 0 0 30px hsl(152 45% 28% / 0.15);
+    --shadow-accent-glow: 0 0 30px hsl(38 92% 50% / 0.3);
+
+    /* Sidebar */
+    --sidebar-background: 152 35% 18%;
+    --sidebar-foreground: 150 20% 95%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 38 95% 15%;
+    --sidebar-accent: 152 30% 25%;
+    --sidebar-accent-foreground: 150 20% 95%;
+    --sidebar-border: 152 25% 25%;
+    --sidebar-ring: 38 92% 50%;
+  }
+
+  .dark {
+    --background: 160 25% 8%;
+    --foreground: 150 20% 95%;
+
+    --card: 160 20% 12%;
+    --card-foreground: 150 20% 95%;
+
+    --popover: 160 20% 12%;
+    --popover-foreground: 150 20% 95%;
+
+    --primary: 152 55% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 20% 18%;
+    --secondary-foreground: 150 20% 90%;
+
+    --muted: 160 15% 20%;
+    --muted-foreground: 150 15% 60%;
+
+    --accent: 38 92% 55%;
+    --accent-foreground: 38 95% 10%;
+
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 38 95% 10%;
+
+    --info: 199 89% 55%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 160 15% 22%;
+    --input: 160 15% 22%;
+    --ring: 152 55% 45%;
+
+    --sidebar-background: 160 25% 6%;
+    --sidebar-foreground: 150 20% 95%;
+    --sidebar-primary: 38 92% 55%;
+    --sidebar-primary-foreground: 38 95% 10%;
+    --sidebar-accent: 160 20% 15%;
+    --sidebar-accent-foreground: 150 20% 95%;
+    --sidebar-border: 160 15% 18%;
+    --sidebar-ring: 38 92% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .text-gradient-solar {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-solar);
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 20px hsl(38 92% 50% / 0.3); }
+  to { box-shadow: 0 0 40px hsl(38 92% 50% / 0.5); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.animate-slide-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.animate-slide-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
+.animate-slide-in-delay-4 { animation-delay: 0.4s; opacity: 0; }
