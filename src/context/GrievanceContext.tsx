@@ -102,8 +102,8 @@ export function GrievanceProvider({ children }: { children: ReactNode }) {
         } else {
           // Add 100 more tickets to existing data
           console.log(`📝 Found ${data.length} tickets. Adding 100 more...`);
-          const moreTickets = generateMoreDummyTickets(100);
-          await createMultipleTicketsToSheetDB(moreTickets);
+          // const moreTickets = generateMoreDummyTickets(100);
+          // await createMultipleTicketsToSheetDB(moreTickets);
           
           // Fetch again after populating
           data = await fetchTicketsFromSheetDB();
