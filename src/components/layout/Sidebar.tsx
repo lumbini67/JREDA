@@ -13,17 +13,19 @@ import {
   Ticket,
   Sun,
   LogOut,
+  ShoppingCart,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, MachineType } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isManager, isVendor, machineType } = useAuth();
   const { t } = useLanguage();
 
   // Admin menu items
@@ -45,7 +47,33 @@ export function Sidebar() {
     { icon: Settings, label: t("settings"), path: "/settings" },
   ];
 
-  const menuItems = isAdmin ? adminMenuItems : userMenuItems;
+  // Manager menu items - show only for their machine type
+  const getManagerMenuItems = (type: MachineType | null) => {
+    const machineLabel = type === "solar_pump" ? "Solar Pump" : type === "mini_grid" ? "Mini Grid" : "Rooftop Solar";
+    return [
+      { icon: LayoutDashboard, label: t("dashboard"), path: "/manager/dashboard" },
+      { icon: Zap, label: `${machineLabel} Monitoring`, path: "/manager/scada-monitoring" },
+      { icon: Ticket, label: t("grievances"), path: "/manager/grievances" },
+      { icon: Settings, label: t("settings"), path: "/settings" },
+    ];
+  };
+
+  // Vendor menu items
+  const vendorMenuItems = [
+    { icon: LayoutDashboard, label: t("dashboard"), path: "/vendor/dashboard" },
+    { icon: ShoppingCart, label: "Applications", path: "/vendor/applications" },
+    { icon: DollarSign, label: "Payments", path: "/vendor/payments" },
+    { icon: Settings, label: t("settings"), path: "/settings" },
+  ];
+
+  const getMenuItems = () => {
+    if (isAdmin) return adminMenuItems;
+    if (isManager) return getManagerMenuItems(machineType);
+    if (isVendor) return vendorMenuItems;
+    return userMenuItems;
+  };
+
+  const menuItems = getMenuItems();
 
   const handleLogout = () => {
     logout();

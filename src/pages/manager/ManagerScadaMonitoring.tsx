@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { useAuth, MachineType } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,6 @@ import {
   Sun,
   Zap,
   Home,
-  Thermometer,
-  Lightbulb,
   MapPin,
   Wifi,
   WifiOff,
@@ -29,19 +28,37 @@ import {
   Battery,
   Activity,
   RefreshCw,
-  Map,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
-import { useScada, ScadaType } from "@/context/ScadaContext";
 
-const typeConfig: Record<ScadaType, { label: string; icon: typeof Sun; color: string; bgColor: string }> = {
+const typeConfig: Record<MachineType, { label: string; icon: typeof Sun; color: string; bgColor: string }> = {
   solar_pump: { label: "Solar Pump", icon: Sun, color: "text-primary", bgColor: "bg-primary/10" },
   mini_grid: { label: "Mini Grid", icon: Zap, color: "text-accent", bgColor: "bg-accent/10" },
   rooftop_solar: { label: "Rooftop Solar", icon: Home, color: "text-info", bgColor: "bg-info/10" },
-  solar_water_heater: { label: "Solar Water Heater", icon: Thermometer, color: "text-orange-500", bgColor: "bg-orange-500/10" },
-  solar_street_light: { label: "Solar Street Light", icon: Lightbulb, color: "text-yellow-500", bgColor: "bg-yellow-500/10" },
-  solar_high_mast: { label: "Solar High Mast", icon: Thermometer, color: "text-purple-500", bgColor: "bg-purple-500/10" },
+};
+
+// Dummy devices filtered by machine type
+const getDummyDevices = (type: MachineType) => {
+  const devices = {
+    solar_pump: [
+      { id: "SP001", name: "Solar Pump - Kanke", district: "Ranchi", block: "Kanke", status: "online", currentPower: 3.2, capacity: 5, todayEnergy: 18.5, lastSync: new Date().toISOString() },
+      { id: "SP002", name: "Solar Pump - Ratu", district: "Ranchi", block: "Ratu", status: "online", currentPower: 4.1, capacity: 5, todayEnergy: 22.3, lastSync: new Date().toISOString() },
+      { id: "SP003", name: "Solar Pump - Ormanjhi", district: "Ranchi", block: "Ormanjhi", status: "offline", currentPower: 0, capacity: 5, todayEnergy: 12.1, lastSync: new Date().toISOString() },
+      { id: "SP004", name: "Solar Pump - Kanke Block", district: "Ranchi", block: "Kanke", status: "online", currentPower: 2.8, capacity: 3, todayEnergy: 15.2, lastSync: new Date().toISOString() },
+      { id: "SP005", name: "Solar Pump - Ranchi Sadar", district: "Ranchi", block: "Ranchi Sadar", status: "online", currentPower: 3.5, capacity: 5, todayEnergy: 19.8, lastSync: new Date().toISOString() },
+      { id: "SP006", name: "Solar Pump - Bundu", district: "Ranchi", block: "Bundu", status: "maintenance", currentPower: 0, capacity: 3, todayEnergy: 8.5, lastSync: new Date().toISOString() },
+    ],
+    mini_grid: [
+      { id: "MG001", name: "Mini Grid - Lapra", district: "Ranchi", block: "Lapra", status: "online", currentPower: 12.5, capacity: 15, todayEnergy: 85.3, lastSync: new Date().toISOString() },
+      { id: "MG002", name: "Mini Grid - Tati", district: "Ranchi", block: "Tati", status: "online", currentPower: 10.2, capacity: 15, todayEnergy: 72.1, lastSync: new Date().toISOString() },
+      { id: "MG003", name: "Mini Grid - Rahe", district: "Ranchi", block: "Rahe", status: "online", currentPower: 8.5, capacity: 10, todayEnergy: 58.2, lastSync: new Date().toISOString() },
+    ],
+    rooftop_solar: [
+      { id: "RS001", name: "Rooftop - JREDA Office", district: "Ranchi", block: "Ranchi Sadar", status: "online", currentPower: 5.1, capacity: 10, todayEnergy: 32.8, lastSync: new Date().toISOString() },
+      { id: "RS002", name: "Rooftop - Govt Hospital", district: "Ranchi", block: "Kanke", status: "online", currentPower: 8.2, capacity: 15, todayEnergy: 52.5, lastSync: new Date().toISOString() },
+      { id: "RS003", name: "Rooftop - School Building", district: "Ranchi", block: "Ratu", status: "offline", currentPower: 0, capacity: 5, todayEnergy: 18.2, lastSync: new Date().toISOString() },
+    ],
+  };
+  return devices[type] || devices.solar_pump;
 };
 
 const statusConfig: Record<string, { label: string; icon: typeof Wifi; color: string; bgColor: string }> = {
@@ -50,17 +67,13 @@ const statusConfig: Record<string, { label: string; icon: typeof Wifi; color: st
   maintenance: { label: "Maintenance", icon: Wrench, color: "text-warning", bgColor: "bg-warning/10" },
 };
 
-const ITEMS_PER_PAGE = 9;
-
-const ScadaMonitoring = () => {
-  const { devices } = useScada();
-  const navigate = useNavigate();
+const ManagerScadaMonitoring = () => {
+  const { machineType } = useAuth();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [liveDevices, setLiveDevices] = useState(devices);
+  const [liveDevices, setLiveDevices] = useState(getDummyDevices(machineType || "solar_pump"));
   const [refreshing, setRefreshing] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Simulate live data updates
   useEffect(() => {
@@ -68,10 +81,10 @@ const ScadaMonitoring = () => {
       setLiveDevices((prev) =>
         prev.map((device) => ({
           ...device,
-          currentPower: device.status === "online" 
-            ? Math.max(0, device.currentPower + (Math.random() - 0.5) * device.capacity * 0.1)
+          currentPower: device.status === "online"
+            ? Math.max(0, device.currentPower + (Math.random() - 0.5) * device.capacity * 0.05)
             : 0,
-          todayEnergy: device.todayEnergy + (device.status === "online" ? Math.random() * 0.1 : 0),
+          todayEnergy: device.todayEnergy + (device.status === "online" ? Math.random() * 0.05 : 0),
           lastSync: device.status === "online" ? new Date().toISOString() : device.lastSync,
         }))
       );
@@ -80,14 +93,9 @@ const ScadaMonitoring = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Update when context changes
-  useEffect(() => {
-    setLiveDevices(devices);
-  }, [devices]);
-
   const handleRefresh = () => {
     setRefreshing(true);
-    setLiveDevices(devices);
+    setLiveDevices(getDummyDevices(machineType || "solar_pump"));
     setTimeout(() => setRefreshing(false), 1000);
   };
 
@@ -96,9 +104,8 @@ const ScadaMonitoring = () => {
       device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.district.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "all" || device.type === filterType;
     const matchesStatus = filterStatus === "all" || device.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   const totalPower = liveDevices
@@ -107,18 +114,7 @@ const ScadaMonitoring = () => {
 
   const totalTodayEnergy = liveDevices.reduce((sum, d) => sum + d.todayEnergy, 0);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredDevices.length / ITEMS_PER_PAGE);
-  const paginatedDevices = filteredDevices.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  const typeInfo = machineType ? typeConfig[machineType] : typeConfig.solar_pump;
 
   return (
     <DashboardLayout>
@@ -126,16 +122,14 @@ const ScadaMonitoring = () => {
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">SCADA Monitoring</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              {typeInfo.label} Monitoring
+            </h1>
             <p className="text-muted-foreground mt-1">
-              Real-time monitoring of all SCADA devices
+              Real-time monitoring of {typeInfo.label.toLowerCase()} devices
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => navigate("/scada-management")}>
-              <Map className="w-4 h-4 mr-2" />
-              View Maps
-            </Button>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
@@ -217,17 +211,6 @@ const ScadaMonitoring = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="solar_pump">Solar Pumps</SelectItem>
-                <SelectItem value="mini_grid">Mini Grids</SelectItem>
-                <SelectItem value="rooftop_solar">Rooftop Solar</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Status" />
@@ -245,10 +228,8 @@ const ScadaMonitoring = () => {
 
       {/* Device Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedDevices.map((device) => {
-          const typeInfo = typeConfig[device.type] || { label: device.type, icon: Activity, color: "text-muted-foreground", bgColor: "bg-muted" };
-          const statusInfo = statusConfig[device.status] || { label: device.status, icon: Wifi, color: "text-muted-foreground", bgColor: "bg-muted" };
-          const TypeIcon = typeInfo.icon;
+        {filteredDevices.map((device) => {
+          const statusInfo = statusConfig[device.status];
           const StatusIcon = statusInfo.icon;
           const powerPercentage = (device.currentPower / device.capacity) * 100;
 
@@ -256,13 +237,12 @@ const ScadaMonitoring = () => {
             <Card
               key={device.id}
               className="hover:shadow-lg transition-all duration-300 cursor-pointer group"
-              onClick={() => navigate(`/scada-monitoring/${device.id}`)}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl ${typeInfo.bgColor} flex items-center justify-center`}>
-                      <TypeIcon className={`w-5 h-5 ${typeInfo.color}`} />
+                      <typeInfo.icon className={`w-5 h-5 ${typeInfo.color}`} />
                     </div>
                     <div>
                       <CardTitle className="text-base group-hover:text-primary transition-colors">
@@ -281,7 +261,7 @@ const ScadaMonitoring = () => {
                 {/* Location */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4" />
-                  {device.location}, {device.district}
+                  {device.block}, {device.district}
                 </div>
 
                 {/* Power Output */}
@@ -302,8 +282,8 @@ const ScadaMonitoring = () => {
                     <p className="font-semibold">{device.todayEnergy.toFixed(1)} kWh</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Energy</p>
-                    <p className="font-semibold">{(device.totalEnergy / 1000).toFixed(1)} MWh</p>
+                    <p className="text-xs text-muted-foreground">Block</p>
+                    <p className="font-semibold">{device.block}</p>
                   </div>
                 </div>
 
@@ -324,58 +304,13 @@ const ScadaMonitoring = () => {
         })}
       </div>
 
-      {/* Pagination */}
-      {filteredDevices.length > 0 && (
-        <div className="flex items-center justify-between p-4 border-t mt-4">
-          <p className="text-sm text-muted-foreground">
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredDevices.length)} of {filteredDevices.length} devices
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="icon"
-                onClick={() => goToPage(page)}
-                className="w-8 h-8"
-              >
-                {page}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
       {filteredDevices.length === 0 && (
         <Card className="p-12 text-center">
           <p className="text-muted-foreground">No devices found matching your filters.</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => navigate("/scada-crud")}
-          >
-            Add New Device
-          </Button>
         </Card>
       )}
     </DashboardLayout>
   );
 };
 
-export default ScadaMonitoring;
+export default ManagerScadaMonitoring;

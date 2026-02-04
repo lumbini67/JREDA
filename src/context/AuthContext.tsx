@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "admin" | "manager" | "vendor";
+
+export type MachineType = "solar_pump" | "mini_grid" | "rooftop_solar";
 
 export interface UserDevice {
   id: string;
@@ -21,6 +23,10 @@ export interface User {
   role: UserRole;
   district: string;
   devices: UserDevice[];
+  // Manager specific
+  machineType?: MachineType;
+  // Vendor specific
+  vendorId?: string;
 }
 
 // Dummy users for testing
@@ -87,6 +93,66 @@ const dummyUsers: { username: string; password: string; user: User }[] = [
       devices: [],
     },
   },
+  // Manager for Solar Pump
+  {
+    username: "manager_solar",
+    password: "manager123",
+    user: {
+      id: "m1",
+      username: "manager_solar",
+      name: "Solar Pump Manager",
+      email: "manager.solar@jreda.gov.in",
+      role: "manager",
+      district: "Ranchi",
+      devices: [],
+      machineType: "solar_pump",
+    },
+  },
+  // Manager for Mini Grid
+  {
+    username: "manager_mini",
+    password: "manager123",
+    user: {
+      id: "m2",
+      username: "manager_mini",
+      name: "Mini Grid Manager",
+      email: "manager.mini@jreda.gov.in",
+      role: "manager",
+      district: "Dhanbad",
+      devices: [],
+      machineType: "mini_grid",
+    },
+  },
+  // Manager for Rooftop Solar
+  {
+    username: "manager_rooftop",
+    password: "manager123",
+    user: {
+      id: "m3",
+      username: "manager_rooftop",
+      name: "Rooftop Solar Manager",
+      email: "manager.rooftop@jreda.gov.in",
+      role: "manager",
+      district: "Bokaro",
+      devices: [],
+      machineType: "rooftop_solar",
+    },
+  },
+  // Vendor
+  {
+    username: "vendor1",
+    password: "vendor123",
+    user: {
+      id: "v1",
+      username: "vendor1",
+      name: "SolarTech Vendor",
+      email: "vendor@solartech.in",
+      role: "vendor",
+      district: "All",
+      devices: [],
+      vendorId: "VND001",
+    },
+  },
 ];
 
 // District officers for email notifications
@@ -107,6 +173,10 @@ interface AuthContextType {
   login: (username: string, password: string) => boolean;
   logout: () => void;
   isAdmin: boolean;
+  isManager: boolean;
+  isVendor: boolean;
+  machineType: MachineType | null;
+  vendorId: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -148,6 +218,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAdmin: user?.role === "admin",
+        isManager: user?.role === "manager",
+        isVendor: user?.role === "vendor",
+        machineType: user?.role === "manager" ? user.machineType : null,
+        vendorId: user?.role === "vendor" ? user.vendorId : null,
       }}
     >
       {children}

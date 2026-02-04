@@ -18,6 +18,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Green Energy Solutions",
     deviceId: "d1",
     deviceType: "solar_pump",
+    status: "pending"
   },
   {
     userId: "u2",
@@ -32,6 +33,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "NA",
     deviceId: "d3",
     deviceType: "rooftop_solar",
+    status: "in_progress"
   },
   {
     userId: "u3",
@@ -46,6 +48,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Solar Tech India",
     deviceId: "d6",
     deviceType: "mini_grid",
+    status: "pending"
   },
   {
     userId: "u2",
@@ -60,6 +63,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "NA",
     deviceId: "d4",
     deviceType: "high_mast",
+    status: "resolved"
   },
   {
     userId: "u1",
@@ -74,6 +78,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Green Energy Solutions",
     deviceId: "d2",
     deviceType: "mini_grid",
+    status: "closed"
   },
   {
     userId: "u4",
@@ -88,6 +93,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Eco Power Systems",
     deviceId: "d7",
     deviceType: "street_light",
+    status: "in_progress"
   },
   {
     userId: "u5",
@@ -102,6 +108,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Sunrise Energy",
     deviceId: "d8",
     deviceType: "solar_pump",
+    status: "resolved"
   },
   {
     userId: "u6",
@@ -116,6 +123,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Green Energy Solutions",
     deviceId: "d9",
     deviceType: "rooftop_solar",
+    status: "closed"
   },
   {
     userId: "u7",
@@ -130,6 +138,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Solar Tech India",
     deviceId: "d10",
     deviceType: "mini_grid",
+    status: "in_progress"
   },
   {
     userId: "u8",
@@ -144,6 +153,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "NA",
     deviceId: "d11",
     deviceType: "solar_pump",
+    status: "resolved"
   },
   {
     userId: "u9",
@@ -158,6 +168,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Eco Power Systems",
     deviceId: "d12",
     deviceType: "high_mast",
+    status: "pending"
   },
   {
     userId: "u10",
@@ -172,6 +183,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Sunrise Energy",
     deviceId: "d13",
     deviceType: "street_light",
+    status: "closed"
   },
   {
     userId: "u11",
@@ -186,6 +198,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Green Energy Solutions",
     deviceId: "d14",
     deviceType: "rooftop_solar",
+    status: "in_progress"
   },
   {
     userId: "u12",
@@ -200,6 +213,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "Solar Tech India",
     deviceId: "d15",
     deviceType: "mini_grid",
+    status: "resolved"
   },
   {
     userId: "u13",
@@ -214,6 +228,7 @@ export const dummyTicketsData: CreateTicketData[] = [
     contractor: "NA",
     deviceId: "d16",
     deviceType: "solar_pump",
+    status: "resolved"
   },
 ];
 
@@ -382,6 +397,8 @@ export function generateMoreDummyTickets(count: number): CreateTicketData[] {
       contractor: contractors[Math.floor(Math.random() * contractors.length)],
       deviceId: `d${Math.floor(Math.random() * 10) + 1}`,
       deviceType: deviceTypes[Math.floor(Math.random() * deviceTypes.length)],
+      status: ["pending", "in_progress", "resolved", "closed"][Math.floor(Math.random() * 4)] as "pending" | "in_progress" | "resolved" | "closed"
+
     });
   }
 

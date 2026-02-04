@@ -11,6 +11,8 @@ import {
   Sun,
   Zap,
   Home,
+  Thermometer,
+  Lightbulb,
   MapPin,
   Wifi,
   WifiOff,
@@ -18,7 +20,6 @@ import {
   Clock,
   Battery,
   Activity,
-  Thermometer,
   Droplets,
   Gauge,
   RefreshCw,
@@ -44,6 +45,9 @@ const typeConfig: Record<ScadaType, { label: string; icon: typeof Sun; color: st
   solar_pump: { label: "Solar Pump", icon: Sun, color: "text-primary", bgColor: "bg-primary/10" },
   mini_grid: { label: "Mini Grid", icon: Zap, color: "text-accent", bgColor: "bg-accent/10" },
   rooftop_solar: { label: "Rooftop Solar", icon: Home, color: "text-info", bgColor: "bg-info/10" },
+  solar_water_heater: { label: "Solar Water Heater", icon: Thermometer, color: "text-orange-500", bgColor: "bg-orange-500/10" },
+  solar_street_light: { label: "Solar Street Light", icon: Lightbulb, color: "text-yellow-500", bgColor: "bg-yellow-500/10" },
+  solar_high_mast: { label: "Solar High Mast", icon: Thermometer, color: "text-purple-500", bgColor: "bg-purple-500/10" },
 };
 
 const statusConfig: Record<string, { label: string; icon: typeof Wifi; color: string; bgColor: string }> = {

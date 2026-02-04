@@ -123,7 +123,8 @@ export function Chatbot() {
     <>
       {/* Chat Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        // onClick={() => setIsOpen(!isOpen)}
+        onClick={() => window.location.href = 'http://122.166.66.4:5000/'}
         className={cn(
           "fixed bottom-20 right-12 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300",
           "bg-primary hover:bg-primary/90 text-primary-foreground",

@@ -143,7 +143,7 @@ export function GrievanceProvider({ children }: { children: ReactNode }) {
       priority: ticket.priority,
       contractor: ticket.contractor,
       images: ticket.images?.join(",") || "",
-      status: "pending" as const,
+      status: (ticket as any).status || "pending", 
       createdAt: now,
       updatedAt: now,
       deviceId: ticket.deviceId || "",

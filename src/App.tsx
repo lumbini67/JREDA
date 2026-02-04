@@ -31,11 +31,21 @@ import UserGrievances from "./pages/user/UserGrievances";
 import AdminGrievances from "./pages/admin/AdminGrievances";
 import SheetDBDemo from "./pages/SheetDBDemo";
 
+// Manager Pages
+import ManagerDashboard from "./pages/manager/ManagerDashboard";
+import ManagerScadaMonitoring from "./pages/manager/ManagerScadaMonitoring";
+import ManagerGrievances from "./pages/manager/ManagerGrievances";
+
+// Vendor Pages
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorApplications from "./pages/vendor/VendorApplications";
+import VendorPayments from "./pages/vendor/VendorPayments";
+
 const queryClient = new QueryClient();
 
 // Protected Route Component
-function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
-  const { isAuthenticated, isAdmin } = useAuth();
+function ProtectedRoute({ children, adminOnly = false, managerOnly = false, vendorOnly = false }: { children: React.ReactNode; adminOnly?: boolean; managerOnly?: boolean; vendorOnly?: boolean }) {
+  const { isAuthenticated, isAdmin, isManager, isVendor } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -45,12 +55,20 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
     return <Navigate to="/user/dashboard" replace />;
   }
 
+  if (managerOnly && !isManager) {
+    return <Navigate to="/user/dashboard" replace />;
+  }
+
+  if (vendorOnly && !isVendor) {
+    return <Navigate to="/user/dashboard" replace />;
+  }
+
   return <>{children}</>;
 }
 
 // Route Redirector based on role
 function HomeRedirect() {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isManager, isVendor } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -58,6 +76,14 @@ function HomeRedirect() {
 
   if (isAdmin) {
     return <Index />;
+  }
+
+  if (isManager) {
+    return <Navigate to="/manager/dashboard" replace />;
+  }
+
+  if (isVendor) {
+    return <Navigate to="/vendor/dashboard" replace />;
   }
 
   return <Navigate to="/user/dashboard" replace />;
@@ -163,6 +189,58 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <UserGrievances />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Manager Routes */}
+        <Route
+          path="/manager/dashboard"
+          element={
+            <ProtectedRoute managerOnly>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/scada-monitoring"
+          element={
+            <ProtectedRoute managerOnly>
+              <ManagerScadaMonitoring />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/grievances"
+          element={
+            <ProtectedRoute managerOnly>
+              <ManagerGrievances />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Vendor Routes */}
+        <Route
+          path="/vendor/dashboard"
+          element={
+            <ProtectedRoute vendorOnly>
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/applications"
+          element={
+            <ProtectedRoute vendorOnly>
+              <VendorApplications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendor/payments"
+          element={
+            <ProtectedRoute vendorOnly>
+              <VendorPayments />
             </ProtectedRoute>
           }
         />

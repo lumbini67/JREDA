@@ -38,7 +38,8 @@ export interface CreateTicketData {
   contractor: string;
   images?: string[];
   deviceId?: string;
-  deviceType?: string;
+  deviceType?: string; 
+  status ?: "pending" | "in_progress" | "resolved" | "closed";
 }
 
 /**
