@@ -15,6 +15,7 @@ import {
   LogOut,
   ShoppingCart,
   DollarSign,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export function Sidebar() {
     { icon: Database, label: t("scadaManagement"), path: "/scada-management" },
     { icon: Ticket, label: t("grievances"), path: "/admin/grievances" },
     { icon: Users, label: t("userManagement"), path: "/user-management" },
+    { icon: Shield, label: t("rolesPermissions"), path: "/roles-permissions" },
     { icon: FileText, label: t("reports"), path: "/reports" },
     { icon: Settings, label: t("settings"), path: "/settings" },
   ];
@@ -53,6 +55,7 @@ export function Sidebar() {
     return [
       { icon: LayoutDashboard, label: t("dashboard"), path: "/manager/dashboard" },
       { icon: Zap, label: `${machineLabel} Monitoring`, path: "/manager/scada-monitoring" },
+      { icon: Building2, label: "Vendors", path: "/manager/vendors" },
       { icon: Ticket, label: t("grievances"), path: "/manager/grievances" },
       { icon: Settings, label: t("settings"), path: "/settings" },
     ];

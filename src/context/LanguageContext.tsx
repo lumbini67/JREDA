@@ -89,7 +89,7 @@ export const translations: Translations = {
   updateStatus: { en: "Update Status", hi: "स्थिति अपडेट करें" },
   resolve: { en: "Resolve", hi: "समाधान करें" },
   close: { en: "Close", hi: "बंद करें" },
-  
+
   // Chatbot
   chatbotTitle: { en: "JREDA Support", hi: "जेरेडा सहायता" },
   chatbotWelcome: { en: "Hello! How can I help you today?", hi: "नमस्ते! आज मैं आपकी कैसे मदद कर सकता हूं?" },

@@ -101,7 +101,7 @@ const dummyUsers: { username: string; password: string; user: User }[] = [
       id: "m1",
       username: "manager_solar",
       name: "Solar Pump Manager",
-      email: "manager.solar@jreda.gov.in",
+      email: "manager.solar@jreda.gov.in",  
       role: "manager",
       district: "Ranchi",
       devices: [],

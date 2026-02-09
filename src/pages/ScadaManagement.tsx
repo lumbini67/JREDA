@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sun, Zap, Home, Thermometer, Lightbulb, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Sun, Zap, Home, Thermometer, Lightbulb, ArrowRight, Building, Map, Factory, Trees, Waves, Search } from "lucide-react";
 
 const managementTypes = [
   {
@@ -53,7 +55,6 @@ const managementTypes = [
     onlineCount: 305,
     totalCapacity: "2.8 MW",
     avgTemp: "55°C",
-    dailyWaterHeated: "1250 KL",
   },
   {
     id: "solar_street_light",
@@ -79,104 +80,172 @@ const managementTypes = [
     deviceCount: 185,
     onlineCount: 178,
     totalCapacity: "3.2 MW",
-    coverageArea: "500 sq.m/unit",
+  },
+  {
+    id: "pm_kusum_ac",
+    title: "PM-KUSUM Scheme (A & C)",
+    description: "Manage solarization of grid-connected pumps and solar power plants under national scheme.",
+    icon: Factory,
+    color: "from-emerald-500/80 to-emerald-500/60",
+    borderColor: "border-emerald-500/70",
+    iconColor: "text-emerald-500",
+    deviceCount: 320,
+    onlineCount: 295,
+    totalCapacity: "15.8 MW",
+    beneficiaryFarmers: "2,450",
+  },
+  {
+    id: "solar_off_grid",
+    title: "Solar PV Off-Grid Systems",
+    description: "Monitor state-funded off-grid solar PV systems for remote areas.",
+    icon: Zap,
+    color: "from-cyan-500/80 to-cyan-500/60",
+    borderColor: "border-cyan-500/70",
+    iconColor: "text-cyan-500",
+    deviceCount: 580,
+    onlineCount: 542,
+    totalCapacity: "4.2 MW",
+    villagesCovered: "320",
+  },
+  {
+    id: "pm_janman",
+    title: "PM JANMAN",
+    description: "Track Central Govt. funded off-grid solar systems for tribal communities.",
+    icon: Building,
+    color: "from-amber-500/80 to-amber-500/60",
+    borderColor: "border-amber-500/70",
+    iconColor: "text-amber-500",
+    deviceCount: 420,
+    onlineCount: 398,
+    totalCapacity: "3.5 MW",
+    householdsServed: "8,500",
+  },
+  {
+    id: "giridih_solar_city",
+    title: "Giridih Solar City",
+    description: "Manage solar installations under MNRE's Solar City Programme.",
+    icon: Trees,
+    color: "from-green-500/80 to-green-500/60",
+    borderColor: "border-green-500/70",
+    iconColor: "text-green-500",
+    deviceCount: 125,
+    onlineCount: 118,
+    totalCapacity: "2.8 MW",
+    cityArea: "2,100 sq.km",
+  },
+  {
+    id: "canal_top_solar",
+    title: "Canal-Top Solar Plants",
+    description: "Oversee utility-scale canal-top solar installations and large solar projects.",
+    icon: Waves,
+    color: "from-blue-500/80 to-blue-500/60",
+    borderColor: "border-blue-500/70",
+    iconColor: "text-blue-500",
+    deviceCount: 28,
+    onlineCount: 26,
+    totalCapacity: "22.5 MW",
+    canalLength: "15.8 km",
   },
 ];
 
 const ScadaManagement = () => {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredTypes = managementTypes.filter(
+    (type) =>
+      type.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      type.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">SCADA Management</h1>
-        <p className="text-muted-foreground mt-1">
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-foreground">SCADA Management</h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Select a management type to view detailed map and device information
         </p>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search schemes..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {/* Management Type Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {managementTypes.map((type) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filteredTypes.map((type) => {
           const Icon = type.icon;
           const onlinePercentage = Math.round((type.onlineCount / type.deviceCount) * 100);
 
           return (
             <Card
               key={type.id}
-              className={`cursor-pointer group relative overflow-hidden border-2 ${type.borderColor} hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+              className={`cursor-pointer group relative overflow-hidden border ${type.borderColor} hover:shadow-lg transition-all duration-200 hover:-translate-y-1`}
               onClick={() => navigate(`/scada-map/${type.id}`)}
             >
               {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-50`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-30`} />
 
-              <CardContent className="relative p-6 space-y-4">
-                {/* Icon and Title */}
+              <CardContent className="relative p-4 space-y-3">
+                {/* Icon and Badge */}
                 <div className="flex items-start justify-between">
-                  <div className={`w-14 h-14 rounded-xl bg-background/80 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={`w-7 h-7 ${type.iconColor}`} />
+                  <div className={`w-10 h-10 rounded-lg bg-background/80 flex items-center justify-center shadow group-hover:scale-105 transition-transform duration-200`}>
+                    <Icon className={`w-5 h-5 ${type.iconColor}`} />
                   </div>
-                  <Badge variant="outline" className="bg-background/50">
-                    {type.deviceCount} Devices
+                  <Badge variant="outline" className="text-xs bg-background/50">
+                    {type.deviceCount}
                   </Badge>
                 </div>
 
-                {/* Title and Description */}
+                {/* Title */}
                 <div>
-                  <h2 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                  <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                     {type.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                    {type.description}
-                  </p>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="bg-background/50 rounded-lg p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-background/50 rounded p-2">
                     <p className="text-xs text-muted-foreground">Online</p>
-                    <p className="text-lg font-semibold text-success">{type.onlineCount}</p>
-                    <p className="text-xs text-muted-foreground">{onlinePercentage}% uptime</p>
+                    <p className="text-sm font-semibold text-success">{type.onlineCount}</p>
                   </div>
-                  <div className="bg-background/50 rounded-lg p-3">
+                  <div className="bg-background/50 rounded p-2">
                     <p className="text-xs text-muted-foreground">
-                      {type.avgTemp ? "Avg Temp" : type.operationalHours ? "Operation" : type.coverageArea ? "Coverage" : "Capacity"}
+                      {type.avgTemp || type.operationalHours || type.beneficiaryFarmers || type.villagesCovered || type.householdsServed || type.cityArea || type.canalLength || "Capacity"}
                     </p>
-                    <p className="text-lg font-semibold">
-                      {type.avgTemp || type.operationalHours || type.coverageArea || type.totalCapacity}
+                    <p className="text-sm font-semibold truncate">
+                      {type.avgTemp || type.operationalHours || type.beneficiaryFarmers || type.villagesCovered || type.householdsServed || type.cityArea || type.canalLength || type.totalCapacity}
                     </p>
                   </div>
                 </div>
 
-                {/* Additional Stats for Solar Water Heater */}
-                {type.dailyWaterHeated && (
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="bg-background/50 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground">Daily Water</p>
-                      <p className="text-lg font-semibold">{type.dailyWaterHeated}</p>
-                    </div>
-                    <div className="bg-background/50 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground">Capacity</p>
-                      <p className="text-lg font-semibold">{type.totalCapacity}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* View Map Button */}
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                    View on Map
+                {/* View Map */}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    View Map
                   </span>
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <ArrowRight className={`w-5 h-5 ${type.iconColor} group-hover:translate-x-1 transition-transform`} />
-                  </div>
+                  <ArrowRight className={`w-4 h-4 ${type.iconColor} group-hover:translate-x-1 transition-transform`} />
                 </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {filteredTypes.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          No schemes found matching "{searchTerm}"
+        </div>
+      )}
     </DashboardLayout>
   );
 };

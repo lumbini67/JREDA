@@ -29,12 +29,14 @@ import UserGrievances from "./pages/user/UserGrievances";
 
 // Admin Pages
 import AdminGrievances from "./pages/admin/AdminGrievances";
+import RolesPermissions from "./pages/admin/RolesPermissions";
 import SheetDBDemo from "./pages/SheetDBDemo";
 
 // Manager Pages
 import ManagerDashboard from "./pages/manager/ManagerDashboard";
 import ManagerScadaMonitoring from "./pages/manager/ManagerScadaMonitoring";
 import ManagerGrievances from "./pages/manager/ManagerGrievances";
+import ManagerVendors from "./pages/manager/ManagerVendors";
 
 // Vendor Pages
 import VendorDashboard from "./pages/vendor/VendorDashboard";
@@ -151,6 +153,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/roles-permissions"
+          element={
+            <ProtectedRoute adminOnly>
+              <RolesPermissions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/reports"
           element={
             <ProtectedRoute adminOnly>
@@ -215,6 +225,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute managerOnly>
               <ManagerGrievances />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/vendors"
+          element={
+            <ProtectedRoute managerOnly>
+              <ManagerVendors />
             </ProtectedRoute>
           }
         />
