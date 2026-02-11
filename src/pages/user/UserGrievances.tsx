@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { useGrievance, TicketStatus, Priority, Ticket } from "@/context/GrievanceContext";
+import { useGrievance, TicketStatus, Ticket } from "@/context/GrievanceContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,31 @@ import { useToast } from "@/hooks/use-toast";
 
 const districts = ["Ranchi", "Dhanbad", "Bokaro", "Jamshedpur", "Hazaribagh", "Giridih", "Deoghar", "Dumka"];
 
+const categories = [
+  "Pump Not Working",
+  "Inverter Error",
+  "Power Fluctuation",
+  "Complete Failure",
+  "Capacity Upgrade Request",
+  "Panel Cleaning Required",
+  "Battery Not Charging",
+  "Wire Damage",
+  "Controller Malfunction",
+  "Sensor Not Working",
+  "Lights Flickering",
+  "Inverter Noise",
+  "Power Outage",
+  "Low Water Discharge",
+];
+
+const vendors = [
+  "Green Energy Solutions",
+  "Solar Tech India",
+  "Eco Power Systems",
+  "Sunrise Energy",
+  "NA",
+];
+
 const UserGrievances = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -70,29 +95,25 @@ const UserGrievances = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">("all");
 
-  // Form state
+  // Form state with new columns
   const [formData, setFormData] = useState({
-    userName: user?.name || "",
-    userMobile: "",
-    userEmail: user?.email || "",
-    district: user?.district || "",
-    site: "",
-    dueDate: "",
-    issueDescription: "",
-    priority: "medium" as Priority,
-    fromDate: "",
-    contractor: "NA",
-    images: [] as string[],
+    farmer_id: user?.id || "",
+    pump_id: "",
+    category: "",
+    sla_hours: 24,
+    assigned_vendor: "NA",
+    expected_resolution_date: "",
+    escalation_level: 0,
   });
 
   const userTickets = user ? getTicketsByUser(user.id) : [];
 
   const filteredTickets = userTickets.filter((ticket) => {
     const matchesSearch =
-      ticket.issueDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.site.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
+      ticket.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.grievance_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.pump_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || ticket.current_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -101,43 +122,34 @@ const UserGrievances = () => {
     
     if (!user) return;
 
-    const ticketData = {
-      userId: user.id,
-      userName: formData.userName,
-      userMobile: formData.userMobile,
-      userEmail: formData.userEmail,
-      district: formData.district,
-      site: formData.site,
-      dueDate: formData.dueDate,
-      issueDescription: formData.issueDescription,
-      priority: formData.priority,
-      fromDate: formData.fromDate || undefined,
-      contractor: formData.contractor,
-      images: formData.images,
-    };
-
     try {
+      const ticketData = {
+        farmer_id: formData.farmer_id || user.id,
+        pump_id: formData.pump_id,
+        category: formData.category,
+        sla_hours: formData.sla_hours,
+        assigned_vendor: formData.assigned_vendor,
+        expected_resolution_date: formData.expected_resolution_date,
+        escalation_level: formData.escalation_level,
+      };
+
       const newTicket = await addTicket(ticketData);
       sendEmailNotification(newTicket);
 
       toast({
         title: t("ticketCreatedSuccess"),
-        description: t("emailSent"),
+        description: "Grievance ticket has been created successfully.",
       });
 
       setIsCreateOpen(false);
       setFormData({
-        userName: user?.name || "",
-        userMobile: "",
-        userEmail: user?.email || "",
-        district: user?.district || "",
-        site: "",
-        dueDate: "",
-        issueDescription: "",
-        priority: "medium",
-        fromDate: "",
-        contractor: "NA",
-        images: [],
+        farmer_id: user?.id || "",
+        pump_id: "",
+        category: "",
+        sla_hours: 24,
+        assigned_vendor: "NA",
+        expected_resolution_date: "",
+        escalation_level: 0,
       });
     } catch (error) {
       toast({
@@ -154,6 +166,8 @@ const UserGrievances = () => {
         return <Clock className="w-4 h-4 text-warning" />;
       case "in_progress":
         return <AlertCircle className="w-4 h-4 text-info" />;
+      case "escalated":
+        return <AlertCircle className="w-4 h-4 text-destructive" />;
       case "resolved":
         return <CheckCircle className="w-4 h-4 text-success" />;
       case "closed":
@@ -165,32 +179,40 @@ const UserGrievances = () => {
     const variants: Record<TicketStatus, string> = {
       pending: "bg-warning/10 text-warning border-warning/30",
       in_progress: "bg-info/10 text-info border-info/30",
+      escalated: "bg-destructive/10 text-destructive border-destructive/30",
       resolved: "bg-success/10 text-success border-success/30",
       closed: "bg-muted text-muted-foreground border-border",
+    };
+    const labels: Record<TicketStatus, string> = {
+      pending: "Open",
+      in_progress: "In Progress",
+      escalated: "Escalated",
+      resolved: "Resolved",
+      closed: "Closed",
     };
     return (
       <Badge variant="outline" className={variants[status]}>
         {getStatusIcon(status)}
-        <span className="ml-1 capitalize">{t(status === "in_progress" ? "inProgress" : status)}</span>
+        <span className="ml-1 capitalize">{labels[status]}</span>
       </Badge>
     );
   };
 
-  const getPriorityBadge = (priority: Priority) => {
-    const variants: Record<Priority, string> = {
-      low: "bg-muted text-muted-foreground",
-      medium: "bg-info/10 text-info",
-      high: "bg-warning/10 text-warning",
-      critical: "bg-destructive/10 text-destructive",
-    };
-    return <Badge className={variants[priority]}>{t(priority)}</Badge>;
+  const getEscalationBadge = (level: number) => {
+    const variants = [
+      "bg-muted text-muted-foreground",
+      "bg-warning/10 text-warning",
+      "bg-destructive/10 text-destructive",
+    ];
+    const labels = ["Level 0", "Level 1", "Level 2"];
+    return <Badge className={variants[level] || variants[0]}>{labels[level] || labels[0]}</Badge>;
   };
 
   const ticketStats = {
     total: userTickets.length,
-    pending: userTickets.filter((t) => t.status === "pending").length,
-    inProgress: userTickets.filter((t) => t.status === "in_progress").length,
-    resolved: userTickets.filter((t) => t.status === "resolved").length,
+    pending: userTickets.filter((t) => t.current_status === "pending" || t.current_status === "Open").length,
+    inProgress: userTickets.filter((t) => t.current_status === "in_progress" || t.current_status === "In Progress").length,
+    resolved: userTickets.filter((t) => t.current_status === "resolved" || t.current_status === "Resolved").length,
   };
 
   return (
@@ -214,118 +236,97 @@ const UserGrievances = () => {
               <DialogHeader>
                 <DialogTitle>{t("createTicket")}</DialogTitle>
                 <DialogDescription>
-                  Fill in the details to create a new support ticket
+                  Fill in the details to create a new grievance ticket
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{t("yourName")} *</Label>
+                    <Label>Farmer ID *</Label>
                     <Input
-                      value={formData.userName}
-                      onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                      value={formData.farmer_id}
+                      onChange={(e) => setFormData({ ...formData, farmer_id: e.target.value })}
+                      placeholder="e.g., u1"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("mobileNumber")} *</Label>
+                    <Label>Pump ID *</Label>
                     <Input
-                      type="tel"
-                      value={formData.userMobile}
-                      onChange={(e) => setFormData({ ...formData, userMobile: e.target.value })}
+                      value={formData.pump_id}
+                      onChange={(e) => setFormData({ ...formData, pump_id: e.target.value })}
+                      placeholder="e.g., PUMP-KANK-001"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("email")} *</Label>
-                    <Input
-                      type="email"
-                      value={formData.userEmail}
-                      onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("selectDistrict")} *</Label>
+                    <Label>Category *</Label>
                     <Select
-                      value={formData.district}
-                      onValueChange={(val) => setFormData({ ...formData, district: val })}
-                      required
+                      value={formData.category}
+                      onValueChange={(val) => setFormData({ ...formData, category: val })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={t("selectDistrict")} />
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {districts.map((d) => (
-                          <SelectItem key={d} value={d}>{d}</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("selectSite")} *</Label>
+                    <Label>SLA Hours *</Label>
                     <Input
-                      value={formData.site}
-                      onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+                      type="number"
+                      value={formData.sla_hours}
+                      onChange={(e) => setFormData({ ...formData, sla_hours: parseInt(e.target.value) || 24 })}
+                      min={1}
+                      max={168}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("dueDate")} *</Label>
-                    <Input
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("priorityLevel")} *</Label>
+                    <Label>Assigned Vendor</Label>
                     <Select
-                      value={formData.priority}
-                      onValueChange={(val) => setFormData({ ...formData, priority: val as Priority })}
+                      value={formData.assigned_vendor}
+                      onValueChange={(val) => setFormData({ ...formData, assigned_vendor: val })}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select vendor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">{t("low")}</SelectItem>
-                        <SelectItem value="medium">{t("medium")}</SelectItem>
-                        <SelectItem value="high">{t("high")}</SelectItem>
-                        <SelectItem value="critical">{t("critical")}</SelectItem>
+                        {vendors.map((vendor) => (
+                          <SelectItem key={vendor} value={vendor}>{vendor}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("fromDate")}</Label>
+                    <Label>Expected Resolution Date *</Label>
                     <Input
                       type="date"
-                      value={formData.fromDate}
-                      onChange={(e) => setFormData({ ...formData, fromDate: e.target.value })}
+                      value={formData.expected_resolution_date}
+                      onChange={(e) => setFormData({ ...formData, expected_resolution_date: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{t("contractor")}</Label>
-                    <Input
-                      value={formData.contractor}
-                      onChange={(e) => setFormData({ ...formData, contractor: e.target.value })}
-                      placeholder="NA"
-                    />
+                    <Label>Escalation Level</Label>
+                    <Select
+                      value={formData.escalation_level.toString()}
+                      onValueChange={(val) => setFormData({ ...formData, escalation_level: parseInt(val) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Level 0</SelectItem>
+                        <SelectItem value="1">Level 1</SelectItem>
+                        <SelectItem value="2">Level 2</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("issueDescription")} *</Label>
-                  <Textarea
-                    value={formData.issueDescription}
-                    onChange={(e) => setFormData({ ...formData, issueDescription: e.target.value })}
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("uploadImages")}</Label>
-                  <Input type="file" multiple accept="image/*" />
-                  <p className="text-xs text-muted-foreground">Upload one or more images related to the issue</p>
                 </div>
                 <div className="flex justify-end gap-3">
                   <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
@@ -392,7 +393,7 @@ const UserGrievances = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder={t("searchTickets")}
+            placeholder="Search by grievance ID, pump ID, or category..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -419,30 +420,36 @@ const UserGrievances = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>{t("issueDescription")}</TableHead>
-                <TableHead>{t("selectDistrict")}</TableHead>
-                <TableHead>{t("priorityLevel")}</TableHead>
-                <TableHead>{t("ticketStatus")}</TableHead>
-                <TableHead>{t("dueDate")}</TableHead>
+                <TableHead>Grievance ID</TableHead>
+                <TableHead>Pump ID</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Created Date</TableHead>
+                <TableHead>SLA Hours</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Assigned Vendor</TableHead>
+                <TableHead>Expected Resolution</TableHead>
+                <TableHead>Escalation</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTickets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     {t("noTicketsFound")}
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredTickets.map((ticket) => (
-                  <TableRow key={ticket.id}>
-                    <TableCell className="font-mono text-sm">{ticket.id}</TableCell>
-                    <TableCell className="max-w-xs truncate">{ticket.issueDescription}</TableCell>
-                    <TableCell>{ticket.district}</TableCell>
-                    <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
-                    <TableCell>{getStatusBadge(ticket.status)}</TableCell>
-                    <TableCell>{ticket.dueDate}</TableCell>
+                  <TableRow key={ticket.grievance_id}>
+                    <TableCell className="font-mono text-sm">{ticket.grievance_id}</TableCell>
+                    <TableCell className="font-mono text-sm">{ticket.pump_id}</TableCell>
+                    <TableCell className="max-w-xs truncate">{ticket.category}</TableCell>
+                    <TableCell>{ticket.created_date ? new Date(ticket.created_date).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell>{ticket.sla_hours}h</TableCell>
+                    <TableCell>{getStatusBadge(ticket.current_status)}</TableCell>
+                    <TableCell>{ticket.assigned_vendor}</TableCell>
+                    <TableCell>{ticket.expected_resolution_date ? new Date(ticket.expected_resolution_date).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell>{getEscalationBadge(ticket.escalation_level)}</TableCell>
                   </TableRow>
                 ))
               )}

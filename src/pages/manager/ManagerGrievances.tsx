@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth, MachineType } from "@/context/AuthContext";
@@ -24,32 +24,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Ticket as TicketIcon,
   Clock,
   CheckCircle,
   AlertCircle,
   XCircle,
   Search,
-  ChevronLeft,
-  ChevronRight,
-  Download,
   FileText,
   FileSpreadsheet,
-  Calendar,
   BarChart3,
   TrendingUp,
-  Users,
   Target,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { TicketStatus, Priority } from "@/context/GrievanceContext";
+import { TicketStatus, Ticket } from "@/context/GrievanceContext";
 
 const typeConfig: Record<MachineType, { label: string; icon: string }> = {
   solar_pump: { label: "Solar Pump", icon: "☀️" },
@@ -57,30 +44,76 @@ const typeConfig: Record<MachineType, { label: string; icon: string }> = {
   rooftop_solar: { label: "Rooftop Solar", icon: "🏠" },
 };
 
-const getDummyTickets = (type: MachineType) => {
-  const tickets = {
-    solar_pump: [
-      { id: "SP-T001", userName: "Ramesh Kumar", district: "Ranchi", site: "Kanke Village", issueDescription: "Solar pump not starting in morning", priority: "high" as Priority, status: "pending" as TicketStatus, createdAt: "2024-01-15T10:30:00Z", resolvedAt: null },
-      { id: "SP-T002", userName: "Suresh Singh", district: "Ranchi", site: "Ratu Block", issueDescription: "Low water output from pump", priority: "medium" as Priority, status: "in_progress" as TicketStatus, createdAt: "2024-01-14T14:20:00Z", resolvedAt: null },
-      { id: "SP-T003", userName: "Ajay Kumar", district: "Ranchi", site: "Ormanjhi", issueDescription: "Sensor malfunction alert", priority: "low" as Priority, status: "resolved" as TicketStatus, createdAt: "2024-01-10T09:15:00Z", resolvedAt: "2024-01-12T16:00:00Z" },
-      { id: "SP-T004", userName: "Deepak Sharma", district: "Ranchi", site: "Kanke Block", issueDescription: "Panel cleaning required", priority: "medium" as Priority, status: "pending" as TicketStatus, createdAt: "2024-01-16T08:00:00Z", resolvedAt: null },
-      { id: "SP-T005", userName: "Vikram Patel", district: "Ranchi", site: "Ranchi Sadar", issueDescription: "Inverter fault detected", priority: "high" as Priority, status: "in_progress" as TicketStatus, createdAt: "2024-01-15T16:45:00Z", resolvedAt: null },
-      { id: "SP-T006", userName: "Mohan Das", district: "Hazaribagh", site: "Ichak", issueDescription: "Motor replacement needed", priority: "high" as Priority, status: "pending" as TicketStatus, createdAt: "2024-01-16T09:30:00Z", resolvedAt: null },
-      { id: "SP-T007", userName: "Sita Devi", district: "Dhanbad", site: "Topchanchi", issueDescription: "Wiring issue", priority: "medium" as Priority, status: "resolved" as TicketStatus, createdAt: "2024-01-08T11:00:00Z", resolvedAt: "2024-01-10T14:00:00Z" },
-      { id: "SP-T008", userName: "Birsa Munda", district: "Giridih", site: "Bengabad", issueDescription: "Battery backup low", priority: "low" as Priority, status: "closed" as TicketStatus, createdAt: "2024-01-05T10:00:00Z", resolvedAt: "2024-01-06T09:00:00Z" },
-    ],
-    mini_grid: [
-      { id: "MG-T001", userName: "Gram Pradhan", district: "Ranchi", site: "Lapra Village", issueDescription: "Mini grid power fluctuation", priority: "high" as Priority, status: "pending" as TicketStatus, createdAt: "2024-01-15T11:00:00Z", resolvedAt: null },
-      { id: "MG-T002", userName: "Village Sarpanch", district: "Ranchi", site: "Tati Village", issueDescription: "Battery not charging properly", priority: "medium" as Priority, status: "in_progress" as TicketStatus, createdAt: "2024-01-14T13:30:00Z", resolvedAt: null },
-      { id: "MG-T003", userName: "Anganwadi Worker", district: "Ranchi", site: "Rahe Village", issueDescription: "Lights not working in community center", priority: "low" as Priority, status: "resolved" as TicketStatus, createdAt: "2024-01-12T10:00:00Z", resolvedAt: "2024-01-13T15:00:00Z" },
-    ],
-    rooftop_solar: [
-      { id: "RS-T001", userName: "Hospital Admin", district: "Ranchi", site: "Govt Hospital", issueDescription: "Rooftop panel damage due to storm", priority: "high" as Priority, status: "pending" as TicketStatus, createdAt: "2024-01-15T09:00:00Z", resolvedAt: null },
-      { id: "RS-T002", userName: "School Principal", district: "Ranchi", site: "High School", issueDescription: "Inverter replacement needed", priority: "medium" as Priority, status: "in_progress" as TicketStatus, createdAt: "2024-01-14T15:00:00Z", resolvedAt: null },
-      { id: "RS-T003", userName: "Office Clerk", district: "Ranchi", site: "JREDA Office", issueDescription: "Monitoring system showing error", priority: "low" as Priority, status: "resolved" as TicketStatus, createdAt: "2024-01-13T11:30:00Z", resolvedAt: "2024-01-14T10:00:00Z" },
-    ],
-  };
-  return tickets[type] || tickets.solar_pump;
+// Dummy data with new column names
+const getDummyTickets = (type: MachineType): Ticket[] => {
+  const tickets: Ticket[] = [
+    {
+      grievance_id: "G001",
+      farmer_id: "u1",
+      pump_id: "PUMP-KANK-001",
+      category: "Pump Not Working",
+      created_date: "2024-01-15T10:30:00Z",
+      sla_hours: 24,
+      current_status: "pending",
+      assigned_vendor: "Green Energy Solutions",
+      expected_resolution_date: "2024-01-16T10:30:00Z",
+      escalation_level: 1,
+      updated_date: "2024-01-15T10:30:00Z",
+    },
+    {
+      grievance_id: "G002",
+      farmer_id: "u2",
+      pump_id: "PUMP-RATU-002",
+      category: "Low Water Discharge",
+      created_date: "2024-01-14T14:20:00Z",
+      sla_hours: 48,
+      current_status: "in_progress",
+      assigned_vendor: "NA",
+      expected_resolution_date: "2024-01-16T14:20:00Z",
+      escalation_level: 0,
+      updated_date: "2024-01-15T09:00:00Z",
+    },
+    {
+      grievance_id: "G003",
+      farmer_id: "u3",
+      pump_id: "PUMP-ORM-003",
+      category: "Sensor Malfunction",
+      created_date: "2024-01-10T09:15:00Z",
+      sla_hours: 24,
+      current_status: "resolved",
+      assigned_vendor: "Solar Tech India",
+      expected_resolution_date: "2024-01-11T09:15:00Z",
+      escalation_level: 0,
+      updated_date: "2024-01-12T16:00:00Z",
+    },
+    {
+      grievance_id: "G004",
+      farmer_id: "u4",
+      pump_id: "PUMP-KBLK-004",
+      category: "Panel Cleaning Required",
+      created_date: "2024-01-16T08:00:00Z",
+      sla_hours: 72,
+      current_status: "pending",
+      assigned_vendor: "Eco Power Systems",
+      expected_resolution_date: "2024-01-19T08:00:00Z",
+      escalation_level: 0,
+      updated_date: "2024-01-16T08:00:00Z",
+    },
+    {
+      grievance_id: "G005",
+      farmer_id: "u5",
+      pump_id: "PUMP-SADR-005",
+      category: "Inverter Fault",
+      created_date: "2024-01-15T16:45:00Z",
+      sla_hours: 12,
+      current_status: "in_progress",
+      assigned_vendor: "Sunrise Energy",
+      expected_resolution_date: "2024-01-16T04:45:00Z",
+      escalation_level: 2,
+      updated_date: "2024-01-15T18:00:00Z",
+    },
+  ];
+  return tickets;
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -88,21 +121,9 @@ const ITEMS_PER_PAGE = 10;
 const MISReport = () => {
   const { machineType } = useAuth();
   const typeInfo = machineType ? typeConfig[machineType] : typeConfig.solar_pump;
-  const tickets = getDummyTickets(machineType || "solar_pump");
 
   const [reportType, setReportType] = useState<"daily" | "weekly" | "monthly">("daily");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-
-  const stats = {
-    total: tickets.length,
-    pending: tickets.filter((t) => t.status === "pending").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved").length,
-    closed: tickets.filter((t) => t.status === "closed").length,
-    highPriority: tickets.filter((t) => t.priority === "high" || t.priority === "critical").length,
-    avgResolutionTime: "2.5 days",
-    satisfactionRate: "92%",
-  };
 
   const dailyData = [
     { date: "2024-01-16", total: 3, resolved: 1, pending: 2 },
@@ -127,6 +148,11 @@ const MISReport = () => {
     { month: "November 2023", total: 132, resolved: 108, pending: 24 },
     { month: "October 2023", total: 145, resolved: 120, pending: 25 },
   ];
+
+  const currentData = reportType === "daily" ? dailyData : reportType === "weekly" ? weeklyData : monthlyData;
+  const totalGrievances = currentData.reduce((sum, row) => sum + row.total, 0);
+  const totalResolved = currentData.reduce((sum, row) => sum + row.resolved, 0);
+  const totalPending = currentData.reduce((sum, row) => sum + row.pending, 0);
 
   const handleExportPDF = () => {
     alert("Exporting MIS Report as PDF...");
@@ -185,7 +211,7 @@ const MISReport = () => {
               <Target className="w-5 h-5 text-primary" />
               <p className="text-xs text-muted-foreground">Total</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.total}</p>
+            <p className="text-2xl font-bold mt-1">{totalGrievances}</p>
           </CardContent>
         </Card>
         <Card className="bg-warning/5 border-warning/20">
@@ -194,7 +220,7 @@ const MISReport = () => {
               <Clock className="w-5 h-5 text-warning" />
               <p className="text-xs text-muted-foreground">Pending</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.pending}</p>
+            <p className="text-2xl font-bold mt-1">{totalPending}</p>
           </CardContent>
         </Card>
         <Card className="bg-info/5 border-info/20">
@@ -203,7 +229,7 @@ const MISReport = () => {
               <AlertCircle className="w-5 h-5 text-info" />
               <p className="text-xs text-muted-foreground">In Progress</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.inProgress}</p>
+            <p className="text-2xl font-bold mt-1">{totalPending > 0 ? Math.floor(totalPending * 0.3) : 0}</p>
           </CardContent>
         </Card>
         <Card className="bg-success/5 border-success/20">
@@ -212,7 +238,7 @@ const MISReport = () => {
               <CheckCircle className="w-5 h-5 text-success" />
               <p className="text-xs text-muted-foreground">Resolved</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.resolved}</p>
+            <p className="text-2xl font-bold mt-1">{totalResolved}</p>
           </CardContent>
         </Card>
         <Card className="bg-muted">
@@ -221,16 +247,16 @@ const MISReport = () => {
               <XCircle className="w-5 h-5 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">Closed</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.closed}</p>
+            <p className="text-2xl font-bold mt-1">{Math.floor(totalResolved * 0.2)}</p>
           </CardContent>
         </Card>
         <Card className="bg-accent/5 border-accent/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-accent" />
-              <p className="text-xs text-muted-foreground">Satisfaction</p>
+              <p className="text-xs text-muted-foreground">Resolution Rate</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.satisfactionRate}</p>
+            <p className="text-2xl font-bold mt-1">{((totalResolved / totalGrievances) * 100).toFixed(1)}%</p>
           </CardContent>
         </Card>
       </div>
@@ -255,27 +281,9 @@ const MISReport = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reportType === "daily" && dailyData.map((row) => (
-                <TableRow key={row.date}>
-                  <TableCell className="font-medium">{row.date}</TableCell>
-                  <TableCell className="text-right">{row.total}</TableCell>
-                  <TableCell className="text-right text-success">{row.resolved}</TableCell>
-                  <TableCell className="text-right text-warning">{row.pending}</TableCell>
-                  <TableCell className="text-right">{((row.resolved / row.total) * 100).toFixed(1)}%</TableCell>
-                </TableRow>
-              ))}
-              {reportType === "weekly" && weeklyData.map((row) => (
-                <TableRow key={row.week}>
-                  <TableCell className="font-medium">{row.week}</TableCell>
-                  <TableCell className="text-right">{row.total}</TableCell>
-                  <TableCell className="text-right text-success">{row.resolved}</TableCell>
-                  <TableCell className="text-right text-warning">{row.pending}</TableCell>
-                  <TableCell className="text-right">{((row.resolved / row.total) * 100).toFixed(1)}%</TableCell>
-                </TableRow>
-              ))}
-              {reportType === "monthly" && monthlyData.map((row) => (
-                <TableRow key={row.month}>
-                  <TableCell className="font-medium">{row.month}</TableCell>
+              {currentData.map((row) => (
+                <TableRow key={row.date || row.week || row.month}>
+                  <TableCell className="font-medium">{row.date || row.week || row.month}</TableCell>
                   <TableCell className="text-right">{row.total}</TableCell>
                   <TableCell className="text-right text-success">{row.resolved}</TableCell>
                   <TableCell className="text-right text-warning">{row.pending}</TableCell>
@@ -294,16 +302,16 @@ const MISReport = () => {
             <CardTitle className="text-sm font-medium">Average Resolution Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-primary">{stats.avgResolutionTime}</p>
+            <p className="text-3xl font-bold text-primary">2.5 days</p>
             <p className="text-xs text-muted-foreground">Target: 3 days</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">High Priority Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">High Escalation Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-warning">{stats.highPriority}</p>
+            <p className="text-3xl font-bold text-warning">3</p>
             <p className="text-xs text-muted-foreground">Requires immediate attention</p>
           </CardContent>
         </Card>
@@ -312,7 +320,7 @@ const MISReport = () => {
             <CardTitle className="text-sm font-medium">Resolution Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-success">{((stats.resolved / stats.total) * 100).toFixed(1)}%</p>
+            <p className="text-3xl font-bold text-success">{((totalResolved / totalGrievances) * 100).toFixed(1)}%</p>
             <p className="text-xs text-muted-foreground">Target: 90%</p>
           </CardContent>
         </Card>
@@ -324,22 +332,19 @@ const MISReport = () => {
 const ManagerGrievances = () => {
   const { machineType } = useAuth();
   const { t } = useLanguage();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [tickets, setTickets] = useState(getDummyTickets(machineType || "solar_pump"));
+  const tickets = getDummyTickets(machineType || "solar_pump");
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
-      ticket.issueDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.site.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || ticket.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesPriority;
+      ticket.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.grievance_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.farmer_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.pump_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || ticket.current_status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE);
@@ -378,22 +383,22 @@ const ManagerGrievances = () => {
     );
   };
 
-  const getPriorityBadge = (priority: Priority) => {
-    const variants: Record<Priority, string> = {
-      low: "bg-muted text-muted-foreground",
-      medium: "bg-info/10 text-info",
-      high: "bg-warning/10 text-warning",
-      critical: "bg-destructive/10 text-destructive",
-    };
-    return <Badge className={variants[priority]}>{priority}</Badge>;
+  const getEscalationBadge = (level: number) => {
+    const variants = [
+      "bg-muted text-muted-foreground",
+      "bg-warning/10 text-warning",
+      "bg-destructive/10 text-destructive",
+    ];
+    const labels = ["Level 0", "Level 1", "Level 2"];
+    return <Badge className={variants[level] || variants[0]}>{labels[level] || labels[0]}</Badge>;
   };
 
   const ticketStats = {
     total: tickets.length,
-    pending: tickets.filter((t) => t.status === "pending").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved").length,
-    closed: tickets.filter((t) => t.status === "closed").length,
+    pending: tickets.filter((t) => t.current_status === "pending").length,
+    inProgress: tickets.filter((t) => t.current_status === "in_progress").length,
+    resolved: tickets.filter((t) => t.current_status === "resolved").length,
+    closed: tickets.filter((t) => t.current_status === "closed").length,
   };
 
   const typeInfo = machineType ? typeConfig[machineType] : typeConfig.solar_pump;
@@ -490,7 +495,7 @@ const ManagerGrievances = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search tickets..."
+                placeholder="Search by grievance ID, farmer ID, pump ID, or category..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -501,99 +506,97 @@ const ManagerGrievances = () => {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="in_progress">In Progress</SelectItem>
                 <SelectItem value="resolved">Resolved</SelectItem>
                 <SelectItem value="closed">Closed</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={priorityFilter} onValueChange={(val) => setPriorityFilter(val as Priority | "all")}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priority</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
-          {/* Tickets Table */}
+          {/* Table */}
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ticket ID</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Site</TableHead>
-                  <TableHead>Issue</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedTickets.map((ticket) => (
-                  <TableRow key={ticket.id}>
-                    <TableCell className="font-mono">{ticket.id}</TableCell>
-                    <TableCell>{ticket.userName}</TableCell>
-                    <TableCell>{ticket.site}</TableCell>
-                    <TableCell className="max-w-xs truncate">{ticket.issueDescription}</TableCell>
-                    <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
-                    <TableCell>{getStatusBadge(ticket.status)}</TableCell>
-                    <TableCell>{new Date(ticket.createdAt).toLocaleDateString()}</TableCell>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Grievance ID</TableHead>
+                    <TableHead>Farmer ID</TableHead>
+                    <TableHead>Pump ID</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Created Date</TableHead>
+                    <TableHead>SLA Hours</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Assigned Vendor</TableHead>
+                    <TableHead>Expected Resolution</TableHead>
+                    <TableHead>Escalation</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination */}
-            {filteredTickets.length > 0 && (
-              <div className="flex items-center justify-between p-4 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTickets.length)} of {filteredTickets.length} tickets
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="icon"
-                      onClick={() => goToPage(page)}
-                      className="w-8 h-8"
-                    >
-                      {page}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
+                </TableHeader>
+                <TableBody>
+                  {paginatedTickets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                        No tickets found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedTickets.map((ticket) => (
+                      <TableRow key={ticket.grievance_id}>
+                        <TableCell className="font-mono text-sm">{ticket.grievance_id}</TableCell>
+                        <TableCell>{ticket.farmer_id}</TableCell>
+                        <TableCell className="font-mono text-sm">{ticket.pump_id}</TableCell>
+                        <TableCell className="max-w-xs truncate">{ticket.category}</TableCell>
+                        <TableCell>{ticket.created_date ? new Date(ticket.created_date).toLocaleDateString() : "-"}</TableCell>
+                        <TableCell>{ticket.sla_hours}h</TableCell>
+                        <TableCell>{getStatusBadge(ticket.current_status)}</TableCell>
+                        <TableCell>{ticket.assigned_vendor}</TableCell>
+                        <TableCell>{ticket.expected_resolution_date ? new Date(ticket.expected_resolution_date).toLocaleDateString() : "-"}</TableCell>
+                        <TableCell>{getEscalationBadge(ticket.escalation_level)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
 
-          {filteredTickets.length === 0 && (
-            <Card className="p-12 text-center">
-              <p className="text-muted-foreground">No tickets found matching your filters.</p>
-            </Card>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTickets.length)} of {filteredTickets.length} tickets
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <Clock className="h-4 w-4 rotate-180" />
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => goToPage(page)}
+                    className="w-8 h-8"
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <Clock className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </TabsContent>
 

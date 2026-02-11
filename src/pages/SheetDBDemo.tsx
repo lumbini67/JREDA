@@ -28,7 +28,7 @@ const SheetDBDemo = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="p-4 rounded-lg bg-secondary/50">
               <p className="text-sm text-muted-foreground mb-1">API Endpoint</p>
-              <code className="text-xs break-all">https://sheetdb.io/api/v1/jv9mggt5mkged</code>
+              <code className="text-xs break-all">https://sheetdb.io/api/v1/uj1y32yara8fx</code>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-1 p-4 rounded-lg bg-success/10 border border-success/20">

@@ -7,7 +7,7 @@
  *   node scripts/add-30-each-status.js
  */
 
-const SHEETDB_API_URL = "https://sheetdb.io/api/v1/jv9mggt5mkged";
+const SHEETDB_API_URL = "https://sheetdb.io/api/v1/uj1y32yara8fx";
 
 const districts = ["Ranchi", "Dhanbad", "Bokaro", "Jamshedpur", "Hazaribagh", "Giridih", "Deoghar", "Dumka"];
 const sites = {

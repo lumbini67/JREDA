@@ -1,45 +1,50 @@
 /**
  * SheetDB API Service for Ticket/Grievance Data
- * API Endpoint: https://sheetdb.io/api/v1/jv9mggt5mkged
+ * API Endpoint: https://sheetdb.io/api/v1/uj1y32yara8fx
  */
 
-const SHEETDB_API_URL = "https://sheetdb.io/api/v1/jv9mggt5mkged";
+const SHEETDB_API_URL = "https://sheetdb.io/api/v1/uj1y32yara8fx";
 
 export interface SheetDBTicket {
-  id: string;
-  userId: string;
-  userName: string;
-  userMobile: string;
-  userEmail: string;
-  district: string;
-  site: string;
-  dueDate: string;
-  issueDescription: string;
-  priority: "low" | "medium" | "high" | "critical";
-  contractor: string;
-  images: string;
-  status: "pending" | "in_progress" | "resolved" | "closed";
-  createdAt: string;
-  updatedAt: string;
+  grievance_id: string;
+  farmer_id: string;
+  pump_id: string;
+  category: string;
+  created_date: string;
+  sla_hours: number;
+  current_status: string; // Allow any string since SheetDB can return "Open", "In Progress", "Escalated", etc.
+  assigned_vendor: string;
+  expected_resolution_date: string;
+  escalation_level: number;
+  updated_date: string;
+  // Legacy fields for backward compatibility
+  id?: string;
+  userId?: string;
+  userName?: string;
+  userMobile?: string;
+  userEmail?: string;
+  district?: string;
+  site?: string;
+  dueDate?: string;
+  issueDescription?: string;
+  priority?: "low" | "medium" | "high" | "critical";
+  contractor?: string;
+  images?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
   deviceId?: string;
   deviceType?: string;
 }
 
 export interface CreateTicketData {
-  userId: string;
-  userName: string;
-  userMobile: string;
-  userEmail: string;
-  district: string;
-  site: string;
-  dueDate: string;
-  issueDescription: string;
-  priority: "low" | "medium" | "high" | "critical";
-  contractor: string;
-  images?: string[];
-  deviceId?: string;
-  deviceType?: string; 
-  status ?: "pending" | "in_progress" | "resolved" | "closed";
+  farmer_id: string;
+  pump_id: string;
+  category: string;
+  sla_hours?: number;
+  assigned_vendor?: string;
+  expected_resolution_date?: string;
+  escalation_level?: number;
 }
 
 /**
@@ -71,7 +76,7 @@ export async function getTickets(): Promise<SheetDBTicket[]> {
  */
 export async function getTicketById(id: string): Promise<SheetDBTicket | null> {
   try {
-    const response = await fetch(`${SHEETDB_API_URL}/search?id=${encodeURIComponent(id)}`, {
+    const response = await fetch(`${SHEETDB_API_URL}/search?grievance_id=${encodeURIComponent(id)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -89,6 +94,13 @@ export async function getTicketById(id: string): Promise<SheetDBTicket | null> {
     throw error;
   }
 }
+function generateGrievanceId() {
+  const timestamp = Date.now(); // unique time
+  const random = Math.floor(Math.random() * 1000);
+
+  return `GRV${timestamp}${random}`;
+}
+
 
 /**
  * POST a new ticket to SheetDB
@@ -99,23 +111,17 @@ export async function createTicket(ticketData: CreateTicketData): Promise<SheetD
     const ticketCount = await getTicketCount();
     
     const newTicket: SheetDBTicket = {
-      id: `T${String(ticketCount + 1).padStart(3, "0")}`,
-      userId: ticketData.userId,
-      userName: ticketData.userName,
-      userMobile: ticketData.userMobile,
-      userEmail: ticketData.userEmail,
-      district: ticketData.district,
-      site: ticketData.site,
-      dueDate: ticketData.dueDate,
-      issueDescription: ticketData.issueDescription,
-      priority: ticketData.priority,
-      contractor: ticketData.contractor,
-      images: ticketData.images?.join(",") || "",
-      status: "pending",
-      createdAt: now,
-      updatedAt: now,
-      deviceId: ticketData.deviceId || "",
-      deviceType: ticketData.deviceType || "",
+      grievance_id: generateGrievanceId(),
+      farmer_id: ticketData.farmer_id,
+      pump_id: ticketData.pump_id,
+      category: ticketData.category,
+      created_date: now,
+      sla_hours: ticketData.sla_hours || 24,
+      current_status: "Pending",
+      assigned_vendor: ticketData.assigned_vendor || "NA",
+      expected_resolution_date: ticketData.expected_resolution_date || "",
+      escalation_level: ticketData.escalation_level || 0,
+      updated_date: now,
     };
 
     const response = await fetch(`${SHEETDB_API_URL}`, {
@@ -144,29 +150,22 @@ export async function createTicket(ticketData: CreateTicketData): Promise<SheetD
  */
 export async function createMultipleTickets(tickets: CreateTicketData[]): Promise<SheetDBTicket[]> {
   try {
-    const now = new Date().toISOString();
     const existingCount = await getTicketCount();
 
     const ticketsWithIds = tickets.map((ticket, index) => {
       const now = new Date().toISOString();
       return {
-        id: `T${String(existingCount + index + 1).padStart(3, "0")}`,
-        userId: ticket.userId,
-        userName: ticket.userName,
-        userMobile: ticket.userMobile,
-        userEmail: ticket.userEmail,
-        district: ticket.district,
-        site: ticket.site,
-        dueDate: ticket.dueDate,
-        issueDescription: ticket.issueDescription,
-        priority: ticket.priority,
-        contractor: ticket.contractor,
-        images: ticket.images?.join(",") || "",
-        status: "pending" as const,
-        createdAt: now,
-        updatedAt: now,
-        deviceId: ticket.deviceId || "",
-        deviceType: ticket.deviceType || "",
+        grievance_id: `G${String(existingCount + index + 1).padStart(3, "0")}`,
+        farmer_id: ticket.farmer_id,
+        pump_id: ticket.pump_id,
+        category: ticket.category,
+        created_date: now,
+        sla_hours: ticket.sla_hours || 24,
+        current_status: "Pending" as const,
+        assigned_vendor: ticket.assigned_vendor || "NA",
+        expected_resolution_date: ticket.expected_resolution_date || "",
+        escalation_level: ticket.escalation_level || 0,
+        updated_date: now,
       };
     });
 
@@ -196,14 +195,14 @@ export async function createMultipleTickets(tickets: CreateTicketData[]): Promis
  */
 export async function updateTicket(id: string, updates: Partial<SheetDBTicket>): Promise<void> {
   try {
-    const response = await fetch(`${SHEETDB_API_URL}/id/${encodeURIComponent(id)}`, {
+    const response = await fetch(`${SHEETDB_API_URL}/grievance_id/${encodeURIComponent(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         ...updates,
-        updatedAt: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
       }),
     });
 
@@ -224,7 +223,7 @@ export async function updateTicket(id: string, updates: Partial<SheetDBTicket>):
  */
 export async function deleteTicket(id: string): Promise<void> {
   try {
-    const response = await fetch(`${SHEETDB_API_URL}/id/${encodeURIComponent(id)}`, {
+    const response = await fetch(`${SHEETDB_API_URL}/grievance_id/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -256,7 +255,7 @@ export async function getTicketCount(): Promise<number> {
 }
 
 /**
- * Search tickets by district
+ * Search tickets by district (using pump_id as fallback)
  */
 export async function getTicketsByDistrict(district: string): Promise<SheetDBTicket[]> {
   try {
@@ -282,9 +281,9 @@ export async function getTicketsByDistrict(district: string): Promise<SheetDBTic
 /**
  * Search tickets by status
  */
-export async function getTicketsByStatus(status: "pending" | "in_progress" | "resolved" | "closed"): Promise<SheetDBTicket[]> {
+export async function getTicketsByStatus(status: string): Promise<SheetDBTicket[]> {
   try {
-    const response = await fetch(`${SHEETDB_API_URL}/search?status=${encodeURIComponent(status)}`, {
+    const response = await fetch(`${SHEETDB_API_URL}/search?current_status=${encodeURIComponent(status)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

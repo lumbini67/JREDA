@@ -3,7 +3,7 @@
  * Run with: node scripts/sendDummyData.js
  */
 
-const SHEETDB_API_URL = "https://sheetdb.io/api/v1/jv9mggt5mkged";
+const SHEETDB_API_URL = "https://sheetdb.io/api/v1/uj1y32yara8fx";
 
 // Dummy ticket data matching your sheet columns
 const dummyTickets = [
