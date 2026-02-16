@@ -4,7 +4,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sun, Zap, Home, Thermometer, Lightbulb, Info, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Sun, Zap, Home, Thermometer, Lightbulb, Info, MapPin, Search } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -186,9 +187,16 @@ const ScadaMap = () => {
   const { typeId } = useParams();
   const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const typeData = managementTypeData[typeId || "solar_pumps"] || managementTypeData.solar_pumps;
   const Icon = typeData.icon;
+
+  const filteredLocations = typeData.locations.filter(
+    (location) =>
+      location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      location.district.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handlePinClick = (locationId: string) => {
     setSelectedLocation(locationId);
@@ -399,21 +407,28 @@ const ScadaMap = () => {
               );
             })()
           ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Click on a pin on the map to view location details</p>
-              </CardContent>
-            </Card>
+            <></>
+             
           )}
 
           {/* Location List */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">All Locations ({typeData.locations.length})</CardTitle>
+              <CardTitle className="text-lg">All Locations ({filteredLocations.length})</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 max-h-[400px] overflow-y-auto">
-              {typeData.locations.map((location) => (
+            <CardContent className="space-y-2">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search locations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="max-h-[350px] overflow-y-auto space-y-2">
+                {filteredLocations.map((location) => (
                 <div
                   key={location.id}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
@@ -432,6 +447,12 @@ const ScadaMap = () => {
                   </div>
                 </div>
               ))}
+              </div>
+              {filteredLocations.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  No locations found matching "{searchTerm}"
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth, MachineType } from "@/context/AuthContext";
+import { useGrievance, TicketStatus, Ticket } from "@/context/GrievanceContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   XCircle,
   Search,
   FileText,
@@ -36,7 +38,6 @@ import {
   TrendingUp,
   Target,
 } from "lucide-react";
-import { TicketStatus, Ticket } from "@/context/GrievanceContext";
 
 const typeConfig: Record<MachineType, { label: string; icon: string }> = {
   solar_pump: { label: "Solar Pump", icon: "☀️" },
@@ -44,115 +45,89 @@ const typeConfig: Record<MachineType, { label: string; icon: string }> = {
   rooftop_solar: { label: "Rooftop Solar", icon: "🏠" },
 };
 
-// Dummy data with new column names
-const getDummyTickets = (type: MachineType): Ticket[] => {
-  const tickets: Ticket[] = [
-    {
-      grievance_id: "G001",
-      farmer_id: "u1",
-      pump_id: "PUMP-KANK-001",
-      category: "Pump Not Working",
-      created_date: "2024-01-15T10:30:00Z",
-      sla_hours: 24,
-      current_status: "pending",
-      assigned_vendor: "Green Energy Solutions",
-      expected_resolution_date: "2024-01-16T10:30:00Z",
-      escalation_level: 1,
-      updated_date: "2024-01-15T10:30:00Z",
-    },
-    {
-      grievance_id: "G002",
-      farmer_id: "u2",
-      pump_id: "PUMP-RATU-002",
-      category: "Low Water Discharge",
-      created_date: "2024-01-14T14:20:00Z",
-      sla_hours: 48,
-      current_status: "in_progress",
-      assigned_vendor: "NA",
-      expected_resolution_date: "2024-01-16T14:20:00Z",
-      escalation_level: 0,
-      updated_date: "2024-01-15T09:00:00Z",
-    },
-    {
-      grievance_id: "G003",
-      farmer_id: "u3",
-      pump_id: "PUMP-ORM-003",
-      category: "Sensor Malfunction",
-      created_date: "2024-01-10T09:15:00Z",
-      sla_hours: 24,
-      current_status: "resolved",
-      assigned_vendor: "Solar Tech India",
-      expected_resolution_date: "2024-01-11T09:15:00Z",
-      escalation_level: 0,
-      updated_date: "2024-01-12T16:00:00Z",
-    },
-    {
-      grievance_id: "G004",
-      farmer_id: "u4",
-      pump_id: "PUMP-KBLK-004",
-      category: "Panel Cleaning Required",
-      created_date: "2024-01-16T08:00:00Z",
-      sla_hours: 72,
-      current_status: "pending",
-      assigned_vendor: "Eco Power Systems",
-      expected_resolution_date: "2024-01-19T08:00:00Z",
-      escalation_level: 0,
-      updated_date: "2024-01-16T08:00:00Z",
-    },
-    {
-      grievance_id: "G005",
-      farmer_id: "u5",
-      pump_id: "PUMP-SADR-005",
-      category: "Inverter Fault",
-      created_date: "2024-01-15T16:45:00Z",
-      sla_hours: 12,
-      current_status: "in_progress",
-      assigned_vendor: "Sunrise Energy",
-      expected_resolution_date: "2024-01-16T04:45:00Z",
-      escalation_level: 2,
-      updated_date: "2024-01-15T18:00:00Z",
-    },
-  ];
-  return tickets;
-};
-
 const ITEMS_PER_PAGE = 10;
 
-const MISReport = () => {
+// Helper function to generate report data from real tickets
+const generateReportData = (tickets: Ticket[], reportType: "daily" | "weekly" | "monthly") => {
+  const now = new Date();
+  
+  if (reportType === "daily") {
+    // Last 7 days
+    const dailyData = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+      const dayTickets = tickets.filter(t => t.created_date.startsWith(dateStr));
+      dailyData.push({
+        date: dateStr,
+        total: dayTickets.length,
+        resolved: dayTickets.filter(t => t.current_status === "resolved" || t.current_status === "closed").length,
+        pending: dayTickets.filter(t => t.current_status === "pending" || t.current_status === "escalated").length,
+        inProgress: dayTickets.filter(t => t.current_status === "in_progress").length,
+      });
+    }
+    return dailyData;
+  } else if (reportType === "weekly") {
+    // Last 4 weeks
+    const weeklyData = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - (i * 7) - weekStart.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const weekTickets = tickets.filter(t => {
+        const ticketDate = new Date(t.created_date);
+        return ticketDate >= weekStart && ticketDate <= weekEnd;
+      });
+      
+      weeklyData.push({
+        week: `Week ${4 - i} (${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}-${weekEnd.toLocaleDateString("en-US", { day: "numeric" })})`,
+        total: weekTickets.length,
+        resolved: weekTickets.filter(t => t.current_status === "resolved" || t.current_status === "closed").length,
+        pending: weekTickets.filter(t => t.current_status === "pending" || t.current_status === "escalated").length,
+        inProgress: weekTickets.filter(t => t.current_status === "in_progress").length,
+      });
+    }
+    return weeklyData;
+  } else {
+    // Last 4 months
+    const monthlyData = [];
+    for (let i = 3; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      
+      const monthTickets = tickets.filter(t => {
+        const ticketDate = new Date(t.created_date);
+        return ticketDate >= monthStart && ticketDate <= monthEnd;
+      });
+      
+      monthlyData.push({
+        month: monthStart.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+        total: monthTickets.length,
+        resolved: monthTickets.filter(t => t.current_status === "resolved" || t.current_status === "closed").length,
+        pending: monthTickets.filter(t => t.current_status === "pending" || t.current_status === "escalated").length,
+        inProgress: monthTickets.filter(t => t.current_status === "in_progress").length,
+      });
+    }
+    return monthlyData;
+  }
+};
+
+const MISReport = ({ tickets }: { tickets: Ticket[] }) => {
   const { machineType } = useAuth();
   const typeInfo = machineType ? typeConfig[machineType] : typeConfig.solar_pump;
 
   const [reportType, setReportType] = useState<"daily" | "weekly" | "monthly">("daily");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const dailyData = [
-    { date: "2024-01-16", total: 3, resolved: 1, pending: 2 },
-    { date: "2024-01-15", total: 5, resolved: 2, pending: 3 },
-    { date: "2024-01-14", total: 4, resolved: 3, pending: 1 },
-    { date: "2024-01-13", total: 6, resolved: 4, pending: 2 },
-    { date: "2024-01-12", total: 2, resolved: 2, pending: 0 },
-    { date: "2024-01-11", total: 4, resolved: 3, pending: 1 },
-    { date: "2024-01-10", total: 5, resolved: 4, pending: 1 },
-  ];
-
-  const weeklyData = [
-    { week: "Week 1 (Jan 1-7)", total: 28, resolved: 22, pending: 6 },
-    { week: "Week 2 (Jan 8-14)", total: 35, resolved: 28, pending: 7 },
-    { week: "Week 3 (Jan 15-21)", total: 32, resolved: 24, pending: 8 },
-    { week: "Week 4 (Jan 22-28)", total: 30, resolved: 25, pending: 5 },
-  ];
-
-  const monthlyData = [
-    { month: "January 2024", total: 125, resolved: 99, pending: 26 },
-    { month: "December 2023", total: 118, resolved: 95, pending: 23 },
-    { month: "November 2023", total: 132, resolved: 108, pending: 24 },
-    { month: "October 2023", total: 145, resolved: 120, pending: 25 },
-  ];
-
-  const currentData = reportType === "daily" ? dailyData : reportType === "weekly" ? weeklyData : monthlyData;
+  // Generate report data from real tickets
+  const currentData = generateReportData(tickets, reportType);
   const totalGrievances = currentData.reduce((sum, row) => sum + row.total, 0);
   const totalResolved = currentData.reduce((sum, row) => sum + row.resolved, 0);
   const totalPending = currentData.reduce((sum, row) => sum + row.pending, 0);
+  const totalInProgress = currentData.reduce((sum, row) => sum + (row as any).inProgress, 0);
 
   const handleExportPDF = () => {
     alert("Exporting MIS Report as PDF...");
@@ -229,7 +204,7 @@ const MISReport = () => {
               <AlertCircle className="w-5 h-5 text-info" />
               <p className="text-xs text-muted-foreground">In Progress</p>
             </div>
-            <p className="text-2xl font-bold mt-1">{totalPending > 0 ? Math.floor(totalPending * 0.3) : 0}</p>
+            <p className="text-2xl font-bold mt-1">{totalInProgress}</p>
           </CardContent>
         </Card>
         <Card className="bg-success/5 border-success/20">
@@ -331,13 +306,18 @@ const MISReport = () => {
 
 const ManagerGrievances = () => {
   const { machineType } = useAuth();
+  const { tickets, getTicketsByMachineType } = useGrievance();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const tickets = getDummyTickets(machineType || "solar_pump");
+  
+  // Get tickets filtered by manager's machine type
+  const filteredByType = machineType 
+    ? getTicketsByMachineType(machineType)
+    : tickets;
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTickets = filteredByType.filter((ticket) => {
     const matchesSearch =
       ticket.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.grievance_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -374,6 +354,7 @@ const ManagerGrievances = () => {
       in_progress: "bg-info/10 text-info border-info/30",
       resolved: "bg-success/10 text-success border-success/30",
       closed: "bg-muted text-muted-foreground border-border",
+      escalated: "bg-destructive/10 text-destructive border-destructive/30",
     };
     return (
       <Badge variant="outline" className={variants[status]}>
@@ -394,11 +375,12 @@ const ManagerGrievances = () => {
   };
 
   const ticketStats = {
-    total: tickets.length,
-    pending: tickets.filter((t) => t.current_status === "pending").length,
-    inProgress: tickets.filter((t) => t.current_status === "in_progress").length,
-    resolved: tickets.filter((t) => t.current_status === "resolved").length,
-    closed: tickets.filter((t) => t.current_status === "closed").length,
+    total: filteredTickets.length,
+    pending: filteredTickets.filter((t) => t.current_status === "pending").length,
+    inProgress: filteredTickets.filter((t) => t.current_status === "in_progress").length,
+    escalated: filteredTickets.filter((t) => t.current_status === "escalated").length,
+    resolved: filteredTickets.filter((t) => t.current_status === "resolved").length,
+    closed: filteredTickets.filter((t) => t.current_status === "closed").length,
   };
 
   const typeInfo = machineType ? typeConfig[machineType] : typeConfig.solar_pump;
@@ -432,7 +414,7 @@ const ManagerGrievances = () => {
 
         <TabsContent value="grievances">
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -451,6 +433,17 @@ const ManagerGrievances = () => {
                   <div>
                     <p className="text-2xl font-bold">{ticketStats.pending}</p>
                     <p className="text-xs text-muted-foreground">Pending</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="w-8 h-8 text-destructive" />
+                  <div>
+                    <p className="text-2xl font-bold">{ticketStats.escalated}</p>
+                    <p className="text-xs text-muted-foreground">Escalated</p>
                   </div>
                 </div>
               </CardContent>
@@ -601,7 +594,7 @@ const ManagerGrievances = () => {
         </TabsContent>
 
         <TabsContent value="mis">
-          <MISReport />
+          <MISReport tickets={filteredTickets} />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

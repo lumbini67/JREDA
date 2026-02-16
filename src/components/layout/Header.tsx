@@ -87,11 +87,14 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                   <User className="w-4 h-4 text-primary-foreground" />
                 </div>
-                <span className="hidden md:inline font-medium">{t("adminUser")}</span>
+                <span className="hidden md:inline font-medium">{user?.name || "User"} <span className="text-xs text-muted-foreground ml-1">({user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)})</span></span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("myAccount")}</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <div className="font-medium">{user?.name || "User"}</div>
+                <div className="text-xs text-muted-foreground font-normal">{user?.email}</div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>{t("profile")}</DropdownMenuItem>
               <DropdownMenuItem>{t("settings")}</DropdownMenuItem>
@@ -107,3 +110,4 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
     </header>
   );
 }
+

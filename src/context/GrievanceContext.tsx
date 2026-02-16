@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"; 
+import emailjs from '@emailjs/browser';
+
 import { 
   getTickets as fetchTicketsFromSheetDB, 
   createTicket as createTicketInSheetDB,
@@ -6,10 +8,87 @@ import {
   type CreateTicketData,
   type SheetDBTicket
 } from "@/services/sheetdb";
-import { dummyTicketsData, generateMoreDummyTickets } from "@/services/dummyTickets";
+import { dummyTicketsData, generateMoreDummyTickets, categoriesByMachineType } from "@/services/dummyTickets";
+import { MachineType } from "./AuthContext"; 
 
 // Support both old and new status values from SheetDB
 export type TicketStatus = "pending" | "in_progress" | "resolved" | "closed" | "escalated";
+
+// Category to machine type mapping
+export const categoryToMachineType: Record<string, MachineType> = {
+  // Solar Pump categories
+  "Solar Pumps": "solar_pump",
+  "Solar Pump": "solar_pump",
+  "Pump Not Working": "solar_pump",
+  "Inverter Error": "solar_pump",
+  "Power Fluctuation": "solar_pump",
+  "Complete Failure": "solar_pump",
+  "Capacity Upgrade Request": "solar_pump",
+  "Panel Cleaning Required": "solar_pump",
+  "Battery Not Charging": "solar_pump",
+  "Wire Damage": "solar_pump",
+  "Controller Malfunction": "solar_pump",
+  "Sensor Not Working": "solar_pump",
+  "Lights Flickering": "solar_pump",
+  "Inverter Noise": "solar_pump",
+  "Power Outage": "solar_pump",
+  "Low Water Discharge": "solar_pump",
+  "Motor Burning Smell": "solar_pump",
+  "Pipeline Leakage": "solar_pump",
+  "Pressure Gauge Fault": "solar_pump",
+  "Solar Panel Damage": "solar_pump",
+  "Fuse Blown": "solar_pump",
+  "MCB Tripping": "solar_pump",
+  
+  // Mini Grid categories
+  "Grid Connection Issue": "mini_grid",
+  "Transformer Fault": "mini_grid",
+  "Distribution Line Problem": "mini_grid",
+  "Meter Reading Error": "mini_grid",
+  "Voltage Fluctuation": "mini_grid",
+  "Load Balancing Issue": "mini_grid",
+  "Phase Failure": "mini_grid",
+  "Overheating Equipment": "mini_grid",
+  "Protection Relay Trip": "mini_grid",
+  "Battery Bank Issue": "mini_grid",
+  "Inverter Overload": "mini_grid",
+  "Line Theft": "mini_grid",
+  "Safety Switch Fault": "mini_grid",
+  "Frequency Issue": "mini_grid",
+  "Harmonic Distortion": "mini_grid",
+  "Grounding Problem": "mini_grid",
+  "Switchgear Fault": "mini_grid",
+  "Cable Damage": "mini_grid",
+  "Substation Issue": "mini_grid",
+  "Power Quality Issue": "mini_grid",
+  
+  // Rooftop Solar categories
+  "Panel Shading Issue": "rooftop_solar",
+  "Rooftop Structure Damage": "rooftop_solar",
+  "Inverter Communication Error": "rooftop_solar",
+  "Monitoring System Down": "rooftop_solar",
+  "Net Metering Issue": "rooftop_solar",
+  "AC Disconnect Fault": "rooftop_solar",
+  "DC Combiner Box Issue": "rooftop_solar",
+  "Surge Protector Fault": "rooftop_solar",
+  "Panel Hotspot": "rooftop_solar",
+  "Microcrack in Cells": "rooftop_solar",
+  "Junction Box Issue": "rooftop_solar",
+  "Enclosure Damage": "rooftop_solar",
+  "Bypass Diode Failure": "rooftop_solar",
+  "Optimizer Fault": "rooftop_solar",
+  "Warranty Claim": "rooftop_solar",
+  "Performance Degradation": "rooftop_solar",
+  "Bird Nesting Issue": "rooftop_solar",
+  "Wind Damage": "rooftop_solar",
+  "Corrosion on Mounting": "rooftop_solar",
+  "Theft Damage": "rooftop_solar",
+};
+
+// Check if a category belongs to a specific machine type
+export const isCategoryForMachineType = (category: string, machineType: MachineType): boolean => {
+  return categoryToMachineType[category] === machineType;
+};
 
 // Map SheetDB status values to our TicketStatus type
 const mapStatusToTicketStatus = (status: string | undefined): TicketStatus => {
@@ -47,6 +126,7 @@ export interface Ticket {
   farmer_id: string;
   pump_id: string;
   category: string;
+  email: string;
   created_date: string;
   sla_hours: number;
   current_status: TicketStatus;
@@ -62,6 +142,7 @@ const convertToTicket = (sheetTicket: SheetDBTicket): Ticket => ({
   farmer_id: sheetTicket.farmer_id || sheetTicket.userId || "",
   pump_id: sheetTicket.pump_id || sheetTicket.site || sheetTicket.deviceId || "",
   category: sheetTicket.category || sheetTicket.issueDescription || "",
+  email: sheetTicket.email || sheetTicket.userEmail || "",
   created_date: sheetTicket.created_date || sheetTicket.createdAt || "",
   sla_hours: sheetTicket.sla_hours || 24,
   current_status: mapStatusToTicketStatus(sheetTicket.current_status || sheetTicket.status),
@@ -76,6 +157,7 @@ const convertToCreateData = (ticket: Omit<Ticket, "grievance_id" | "created_date
   farmer_id: ticket.farmer_id,
   pump_id: ticket.pump_id,
   category: ticket.category,
+  email: ticket.email,
   sla_hours: ticket.sla_hours,
   assigned_vendor: ticket.assigned_vendor,
   expected_resolution_date: ticket.expected_resolution_date,
@@ -88,6 +170,7 @@ interface GrievanceContextType {
   updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
   updateTicket: (ticketId: string, updates: Partial<Ticket>) => Promise<void>;
   getTicketsByUser: (userId: string) => Ticket[];
+  getTicketsByMachineType: (machineType: MachineType) => Ticket[];
   getTicketById: (ticketId: string) => Ticket | undefined;
   sendEmailNotification: (ticket: Ticket) => void;
   refreshTickets: () => Promise<void>;
@@ -101,6 +184,17 @@ export function GrievanceProvider({ children }: { children: ReactNode }) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize EmailJS
+  useEffect(() => {
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    if (publicKey && publicKey !== "your_public_key") {
+      emailjs.init(publicKey);
+      console.log("✅ EmailJS initialized");
+    } else {
+      console.warn("⚠️ EmailJS public key not found in environment variables");
+    }
+  }, []);
 
   // Fetch tickets from SheetDB on mount
   useEffect(() => {
@@ -152,6 +246,7 @@ export function GrievanceProvider({ children }: { children: ReactNode }) {
       farmer_id: ticket.farmer_id,
       pump_id: ticket.pump_id,
       category: ticket.category,
+      email: ticket.email || "",
       created_date: now,
       sla_hours: ticket.sla_hours || 24,
       current_status: "Pending" as const,
@@ -252,14 +347,57 @@ export function GrievanceProvider({ children }: { children: ReactNode }) {
     return tickets.filter((ticket) => ticket.farmer_id === userId);
   };
 
+  const getTicketsByMachineType = (machineType: MachineType): Ticket[] => {
+    return tickets.filter((ticket) => isCategoryForMachineType(ticket.category, machineType));
+  };
+
   const getTicketById = (ticketId: string): Ticket | undefined => {
     return tickets.find((ticket) => ticket.grievance_id === ticketId);
   };
 
-  const sendEmailNotification = (ticket: Ticket) => {
-    console.log(`Email notification sent for grievance ${ticket.grievance_id}`);
-    console.log(`Category: ${ticket.category}`);
-    console.log(`Assigned Vendor: ${ticket.assigned_vendor}`);
+  const sendEmailNotification = async (ticket: Ticket) => {
+    // EmailJS configuration - Replace these with your actual EmailJS credentials
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || "your_service_id";
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "grievance_confirmation";
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "your_public_key";
+
+    // Don't send email if no email is provided
+    if (!ticket.email || !ticket.email.includes("@")) {
+      console.log(`No valid email for grievance ${ticket.grievance_id}, skipping email notification`);
+      return;
+    }
+
+    try {
+      console.log("📧 Sending email notification for grievance:", ticket);
+      console.log("Using EmailJS config:", { serviceId, templateId, publicKey });
+      const templateParams = {
+            to_email: ticket.email,
+            farmer_name: `Farmer ${ticket.farmer_id}`,
+            grievance_id: ticket.grievance_id,
+            pump_id: ticket.pump_id,
+            category: ticket.category,
+            status: ticket.current_status,
+            created_date: new Date(ticket.created_date).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            assigned_vendor: ticket.assigned_vendor,
+            expected_resolution: ticket.expected_resolution_date 
+              ? new Date(ticket.expected_resolution_date).toLocaleDateString("en-IN")
+              : "Within 24 hours"
+          };
+
+
+      const res = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      console.log("response from EmailJS:", res);
+      console.log(`✅ Email notification sent successfully for grievance ${ticket.grievance_id} to ${ticket.email}`);
+    } catch (error) {
+      console.error(`❌ Failed to send email notification for grievance ${ticket.grievance_id}:`, error);
+      // Don't throw error - email is secondary functionality
+    }
   };
 
   const refreshTickets = async () => {
@@ -287,6 +425,7 @@ export function GrievanceProvider({ children }: { children: ReactNode }) {
         updateTicketStatus,
         updateTicket,
         getTicketsByUser,
+        getTicketsByMachineType,
         getTicketById,
         sendEmailNotification,
         refreshTickets,

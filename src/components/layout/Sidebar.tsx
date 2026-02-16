@@ -16,6 +16,7 @@ import {
   ShoppingCart,
   DollarSign,
   Shield,
+  ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export function Sidebar() {
     { icon: LayoutDashboard, label: t("dashboard"), path: "/" },
     { icon: Zap, label: t("scadaMonitoring"), path: "/scada-monitoring" },
     { icon: Database, label: t("scadaManagement"), path: "/scada-management" },
+    { icon: ShoppingBag, label: "Vendors", path: "/admin/vendors" },
     { icon: Ticket, label: t("grievances"), path: "/admin/grievances" },
     { icon: Users, label: t("userManagement"), path: "/user-management" },
     { icon: Shield, label: t("rolesPermissions"), path: "/roles-permissions" },
@@ -117,7 +119,7 @@ export function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (

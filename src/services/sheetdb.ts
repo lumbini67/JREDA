@@ -17,6 +17,7 @@ export interface SheetDBTicket {
   expected_resolution_date: string;
   escalation_level: number;
   updated_date: string;
+  email: string;
   // Legacy fields for backward compatibility
   id?: string;
   userId?: string;
@@ -41,6 +42,7 @@ export interface CreateTicketData {
   farmer_id: string;
   pump_id: string;
   category: string;
+  email: string;
   sla_hours?: number;
   assigned_vendor?: string;
   expected_resolution_date?: string;
@@ -115,6 +117,7 @@ export async function createTicket(ticketData: CreateTicketData): Promise<SheetD
       farmer_id: ticketData.farmer_id,
       pump_id: ticketData.pump_id,
       category: ticketData.category,
+      email: ticketData.email,
       created_date: now,
       sla_hours: ticketData.sla_hours || 24,
       current_status: "Pending",
@@ -159,6 +162,7 @@ export async function createMultipleTickets(tickets: CreateTicketData[]): Promis
         farmer_id: ticket.farmer_id,
         pump_id: ticket.pump_id,
         category: ticket.category,
+        email: ticket.email || "",
         created_date: now,
         sla_hours: ticket.sla_hours || 24,
         current_status: "Pending" as const,

@@ -29,6 +29,7 @@ import UserGrievances from "./pages/user/UserGrievances";
 
 // Admin Pages
 import AdminGrievances from "./pages/admin/AdminGrievances";
+import AdminVendors from "./pages/admin/AdminVendors";
 import RolesPermissions from "./pages/admin/RolesPermissions";
 import SheetDBDemo from "./pages/SheetDBDemo";
 
@@ -173,6 +174,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute adminOnly>
               <AdminGrievances />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/vendors"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminVendors />
             </ProtectedRoute>
           }
         />

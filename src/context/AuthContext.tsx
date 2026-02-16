@@ -84,7 +84,7 @@ const dummyUsers: { username: string; password: string; user: User }[] = [
     username: "admin",
     password: "admin123",
     user: {
-      id: "a1",
+      id: "aditya132",
       username: "admin",
       name: "Administrator",
       email: "admin@jreda.gov.in",
@@ -98,7 +98,7 @@ const dummyUsers: { username: string; password: string; user: User }[] = [
     username: "manager_solar",
     password: "manager123",
     user: {
-      id: "m1",
+      id: "Mohit165",
       username: "manager_solar",
       name: "Solar Pump Manager",
       email: "manager.solar@jreda.gov.in",  

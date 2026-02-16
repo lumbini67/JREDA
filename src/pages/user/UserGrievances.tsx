@@ -48,20 +48,17 @@ import { useToast } from "@/hooks/use-toast";
 const districts = ["Ranchi", "Dhanbad", "Bokaro", "Jamshedpur", "Hazaribagh", "Giridih", "Deoghar", "Dumka"];
 
 const categories = [
-  "Pump Not Working",
-  "Inverter Error",
-  "Power Fluctuation",
-  "Complete Failure",
-  "Capacity Upgrade Request",
-  "Panel Cleaning Required",
-  "Battery Not Charging",
-  "Wire Damage",
-  "Controller Malfunction",
-  "Sensor Not Working",
-  "Lights Flickering",
-  "Inverter Noise",
-  "Power Outage",
-  "Low Water Discharge",
+  "Solar Pumps",
+  "Mini Grids",
+  "Rooftop Solar",
+  "Solar Water Heater",
+  "Solar Street Light",
+  "Solar High Mast",
+  "PM-KUSUM Scheme (A & C)",
+  "Solar PV Off-Grid Systems",
+  "PM JANMAN",
+  "Giridih Solar City",
+  "Canal-Top Solar Plants",
 ];
 
 const vendors = [
@@ -94,12 +91,14 @@ const UserGrievances = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">("all");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state with new columns
   const [formData, setFormData] = useState({
     farmer_id: user?.id || "",
     pump_id: "",
     category: "",
+    email: "",
     sla_hours: 24,
     assigned_vendor: "NA",
     expected_resolution_date: "",
@@ -123,10 +122,13 @@ const UserGrievances = () => {
     if (!user) return;
 
     try {
+      setIsSubmitting(true);
+      
       const ticketData = {
-        farmer_id: formData.farmer_id || user.id,
+        farmer_id: user.id,
         pump_id: formData.pump_id,
         category: formData.category,
+        email: formData.email,
         sla_hours: formData.sla_hours,
         assigned_vendor: formData.assigned_vendor,
         expected_resolution_date: formData.expected_resolution_date,
@@ -134,8 +136,15 @@ const UserGrievances = () => {
       };
 
       const newTicket = await addTicket(ticketData);
-      sendEmailNotification(newTicket);
-
+      
+      // Send email notification after ticket is created
+      if (formData.email && formData.email.includes("@")) {
+        await sendEmailNotification(newTicket);
+      }
+      
+      // Refresh tickets from SheetDB to ensure the new ticket appears
+      await refreshTickets();
+      
       toast({
         title: t("ticketCreatedSuccess"),
         description: "Grievance ticket has been created successfully.",
@@ -146,6 +155,7 @@ const UserGrievances = () => {
         farmer_id: user?.id || "",
         pump_id: "",
         category: "",
+        email: "",
         sla_hours: 24,
         assigned_vendor: "NA",
         expected_resolution_date: "",
@@ -157,6 +167,8 @@ const UserGrievances = () => {
         description: t("pleaseTryAgain"),
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -245,10 +257,10 @@ const UserGrievances = () => {
                     <Label>Farmer ID *</Label>
                     <Input
                       value={formData.farmer_id}
-                      onChange={(e) => setFormData({ ...formData, farmer_id: e.target.value })}
+                      disabled
                       placeholder="e.g., u1"
-                      required
                     />
+                    <p className="text-xs text-muted-foreground">Your user ID is automatically assigned</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Pump ID *</Label>
@@ -274,6 +286,17 @@ const UserGrievances = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email Address *</Label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="your.email@example.com"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">You will receive ticket confirmation at this email</p>
                   </div>
                   <div className="space-y-2">
                     <Label>SLA Hours *</Label>
@@ -329,10 +352,22 @@ const UserGrievances = () => {
                   </div>
                 </div>
                 <div className="flex justify-end gap-3">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting}>
                     {t("cancel")}
                   </Button>
-                  <Button type="submit">{t("submit")}</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      t("submit")
+                    )}
+                  </Button>
                 </div>
               </form>
             </DialogContent>

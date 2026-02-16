@@ -152,37 +152,205 @@ const Index = () => {
 
   const metrics = getMetrics();
 
-  // Mock data for charts
-  const districtData = [
-    { name: 'Ranchi', value: 420, color: '#3b82f6' },
-    { name: 'Hazaribagh', value: 380, color: '#10b981' },
-    { name: 'Dhanbad', value: 350, color: '#8b5cf6' },
-    { name: 'Jamshedpur', value: 320, color: '#f59e0b' },
-    { name: 'Bokaro', value: 280, color: '#ef4444' },
-    { name: 'Deoghar', value: 240, color: '#ec4899' },
-  ];
+  // Get rooftop solar data based on time range
+  const getRooftopData = () => {
+    const multipliers = {
+      today: { installations: 1, capacity: 1, savings: 1 },
+      week: { installations: 7, capacity: 7.5, savings: 8 },
+      month: { installations: 28, capacity: 30, savings: 35 },
+      quarter: { installations: 85, capacity: 90, savings: 100 },
+      year: { installations: 320, capacity: 350, savings: 400 }
+    };
+    const m = multipliers[timeRange as keyof typeof multipliers];
+    return {
+      installations: Math.round(1200 * m.installations / 30),
+      capacity: (18.5 * m.capacity / 30).toFixed(1),
+      savings: Math.round(32 * m.savings / 30)
+    };
+  };
 
-  const complaintTypes = [
-    { name: 'Technical Issues', count: 8, color: '#ef4444' },
-    { name: 'Billing Queries', count: 5, color: '#f59e0b' },
-    { name: 'Installation', count: 3, color: '#10b981' },
-    { name: 'Maintenance', count: 2, color: '#3b82f6' },
-  ];
+  // Get mini grids data based on time range
+  const getMiniGridsData = () => {
+    const multipliers = {
+      today: { villages: 1, households: 1, battery: 92 },
+      week: { villages: 5, households: 28, battery: 92 },
+      month: { villages: 18, households: 120, battery: 91 },
+      quarter: { villages: 50, households: 350, battery: 90 },
+      year: { villages: 185, households: 1400, battery: 88 }
+    };
+    const m = multipliers[timeRange as keyof typeof multipliers];
+    return {
+      villages: Math.round(185 * m.villages / 365),
+      households: Math.round(4520 * m.households / 365),
+      battery: m.battery
+    };
+  };
 
-  const energyMixData = [
-    { name: 'Solar Pumps', value: 35, color: '#3b82f6' },
-    { name: 'Rooftop Solar', value: 25, color: '#f59e0b' },
-    { name: 'Canal-Top', value: 20, color: '#8b5cf6' },
-    { name: 'Mini Grids', value: 15, color: '#10b981' },
-    { name: 'Other RE', value: 5, color: '#ec4899' },
-  ];
+  // Get canal top solar data based on time range
+  const getCanalTopData = () => {
+    const multipliers = {
+      today: { capacity: 150, feedIn: 720 },
+      week: { capacity: 152, feedIn: 5040 },
+      month: { capacity: 158, feedIn: 21600 },
+      quarter: { capacity: 165, feedIn: 64800 },
+      year: { capacity: 180, feedIn: 260000 }
+    };
+    const m = multipliers[timeRange as keyof typeof multipliers];
+    return {
+      capacity: Math.round(150 * m.capacity / 150),
+      feedIn: Math.round(720 * m.feedIn / 720)
+    };
+  };
 
-  const projectStatusData = [
-    { name: 'Completed', value: 45, color: '#10b981' },
-    { name: 'In Progress', value: 35, color: '#3b82f6' },
-    { name: 'Planned', value: 15, color: '#f59e0b' },
-    { name: 'Delayed', value: 5, color: '#ef4444' },
-  ];
+  // Get PM JANMAN data based on time range
+  const getJanmanData = () => {
+    const multipliers = {
+      today: { projects: 1, beneficiaries: 300 },
+      week: { projects: 5, beneficiaries: 1800 },
+      month: { projects: 18, beneficiaries: 7200 },
+      quarter: { projects: 50, beneficiaries: 20000 },
+      year: { projects: 95, beneficiaries: 80000 }
+    };
+    const m = multipliers[timeRange as keyof typeof multipliers];
+    return {
+      projects: Math.round(95 * m.projects / 365),
+      beneficiaries: Math.round(28700 * m.beneficiaries / 365)
+    };
+  };
+
+  // Get grievance data based on time range
+  const getGrievanceData = () => {
+    const multipliers = {
+      today: { newToday: 18, pending: 45, avgHours: 3.5 },
+      week: { newToday: 85, pending: 120, avgHours: 4.2 },
+      month: { newToday: 320, pending: 280, avgHours: 5.1 },
+      quarter: { newToday: 850, pending: 450, avgHours: 6.0 },
+      year: { newToday: 2800, pending: 800, avgHours: 7.5 }
+    };
+    return multipliers[timeRange as keyof typeof multipliers];
+  };
+
+  // Get complaint types data based on time range
+  const getComplaintTypes = () => {
+    const multipliers = {
+      today: [
+        { name: 'Technical Issues', count: 8, color: '#ef4444' },
+        { name: 'Billing Queries', count: 5, color: '#f59e0b' },
+        { name: 'Installation', count: 3, color: '#10b981' },
+        { name: 'Maintenance', count: 2, color: '#3b82f6' },
+      ],
+      week: [
+        { name: 'Technical Issues', count: 35, color: '#ef4444' },
+        { name: 'Billing Queries', count: 22, color: '#f59e0b' },
+        { name: 'Installation', count: 15, color: '#10b981' },
+        { name: 'Maintenance', count: 13, color: '#3b82f6' },
+      ],
+      month: [
+        { name: 'Technical Issues', count: 120, color: '#ef4444' },
+        { name: 'Billing Queries', count: 85, color: '#f59e0b' },
+        { name: 'Installation', count: 55, color: '#10b981' },
+        { name: 'Maintenance', count: 60, color: '#3b82f6' },
+      ],
+      quarter: [
+        { name: 'Technical Issues', count: 320, color: '#ef4444' },
+        { name: 'Billing Queries', count: 220, color: '#f59e0b' },
+        { name: 'Installation', count: 150, color: '#10b981' },
+        { name: 'Maintenance', count: 160, color: '#3b82f6' },
+      ],
+      year: [
+        { name: 'Technical Issues', count: 1100, color: '#ef4444' },
+        { name: 'Billing Queries', count: 750, color: '#f59e0b' },
+        { name: 'Installation', count: 520, color: '#10b981' },
+        { name: 'Maintenance', count: 550, color: '#3b82f6' },
+      ]
+    };
+    return multipliers[timeRange as keyof typeof multipliers];
+  };
+
+  // Get district data based on time range
+  const getDistrictData = () => {
+    const multipliers = {
+      today: 1,
+      week: 7,
+      month: 30,
+      quarter: 90,
+      year: 365
+    };
+    const m = multipliers[timeRange as keyof typeof multipliers];
+    return [
+      { name: 'Ranchi', value: Math.round(420 * m), color: '#3b82f6' },
+      { name: 'Hazaribagh', value: Math.round(380 * m), color: '#10b981' },
+      { name: 'Dhanbad', value: Math.round(350 * m), color: '#8b5cf6' },
+      { name: 'Jamshedpur', value: Math.round(320 * m), color: '#f59e0b' },
+      { name: 'Bokaro', value: Math.round(280 * m), color: '#ef4444' },
+      { name: 'Deoghar', value: Math.round(240 * m), color: '#ec4899' },
+    ];
+  };
+
+  // Get Giridhi Solar City data based on time range
+  const getGiridhiData = () => {
+    const multipliers = {
+      today: { capacity: 25, components: 14 },
+      week: { capacity: 25, components: 15 },
+      month: { capacity: 25.5, components: 16 },
+      quarter: { capacity: 26, components: 17 },
+      year: { capacity: 28, components: 18 }
+    };
+    return multipliers[timeRange as keyof typeof multipliers];
+  };
+
+  // Get energy mix data based on time range
+  const getEnergyMixData = () => {
+    return [
+      { name: 'Solar Pumps', value: 35, color: '#3b82f6' },
+      { name: 'Rooftop Solar', value: 25, color: '#f59e0b' },
+      { name: 'Canal-Top', value: 20, color: '#8b5cf6' },
+      { name: 'Mini Grids', value: 15, color: '#10b981' },
+      { name: 'Other RE', value: 5, color: '#ec4899' },
+    ];
+  };
+
+  // Get project status data based on time range
+  const getProjectStatusData = () => {
+    const multipliers = {
+      today: { completed: 45, inProgress: 35, planned: 15, delayed: 5 },
+      week: { completed: 48, inProgress: 33, planned: 14, delayed: 5 },
+      month: { completed: 52, inProgress: 30, planned: 13, delayed: 5 },
+      quarter: { completed: 55, inProgress: 28, planned: 12, delayed: 5 },
+      year: { completed: 60, inProgress: 25, planned: 10, delayed: 5 }
+    };
+    const m = multipliers[timeRange as keyof typeof multipliers];
+    return [
+      { name: 'Completed', value: m.completed, color: '#10b981' },
+      { name: 'In Progress', value: m.inProgress, color: '#3b82f6' },
+      { name: 'Planned', value: m.planned, color: '#f59e0b' },
+      { name: 'Delayed', value: m.delayed, color: '#ef4444' },
+    ];
+  };
+
+  // Get achievement percentage based on time range
+  const getAchievementPercentage = () => {
+    const percentages = {
+      today: 71.3,
+      week: 73.0,
+      month: 76.3,
+      quarter: 80.0,
+      year: 100.0
+    };
+    return percentages[timeRange as keyof typeof percentages];
+  };
+
+  const rooftopData = getRooftopData();
+  const miniGridsData = getMiniGridsData();
+  const canalTopData = getCanalTopData();
+  const janmanData = getJanmanData();
+  const grievanceData = getGrievanceData();
+  const complaintTypes = getComplaintTypes();
+  const districtData = getDistrictData();
+  const giridhiData = getGiridhiData();
+  const energyMixData = getEnergyMixData();
+  const projectStatusData = getProjectStatusData();
+  const achievementPercentage = getAchievementPercentage();
 
   // Download function
   const handleDownload = (format: string) => {
@@ -253,71 +421,6 @@ This is a simulated PDF download.
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }; 
-  const MapPlaceholder = () => (
-  <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg overflow-hidden">
-    <div className="relative h-full">
-      {/* Simulated map with points */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-4/5 h-4/5 bg-blue-100 border-2 border-blue-200 rounded-lg relative">
-          {/* Map grid lines */}
-          <div className="absolute inset-0">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="absolute left-0 right-0 h-px bg-blue-200" style={{ top: `${(i + 1) * 10}%` }}></div>
-            ))}
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="absolute top-0 bottom-0 w-px bg-blue-200" style={{ left: `${(i + 1) * 10}%` }}></div>
-            ))}
-          </div>
-          
-          {/* Location markers */}
-          {[
-            { top: '30%', left: '40%', size: 'normal' },
-            { top: '50%', left: '60%', size: 'large' },
-            { top: '35%', left: '70%', size: 'normal' },
-            { top: '60%', left: '30%', size: 'small' },
-            { top: '40%', left: '50%', size: 'normal' },
-            { top: '65%', left: '55%', size: 'large' },
-            { top: '25%', left: '25%', size: 'normal' },
-            { top: '70%', left: '75%', size: 'small' },
-          ].map((marker, idx) => (
-            <div
-              key={idx}
-              className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
-                marker.size === 'large' ? 'w-4 h-4' : marker.size === 'normal' ? 'w-3 h-3' : 'w-2 h-2'
-              } bg-green-500 rounded-full border-2 border-white shadow-md`}
-              style={{ top: marker.top, left: marker.left }}
-            ></div>
-          ))}
-          
-          {/* Major city labels */}
-          <div className="absolute text-xs font-medium text-gray-700" style={{ top: '28%', left: '38%' }}>
-            Ranchi
-          </div>
-          <div className="absolute text-xs font-medium text-gray-700" style={{ top: '48%', left: '58%' }}>
-            Dhanbad
-          </div>
-          <div className="absolute text-xs font-medium text-gray-700" style={{ top: '63%', left: '28%' }}>
-            Jamshedpur
-          </div>
-        </div>
-      </div>
-      
-      {/* Map controls */}
-      <div className="absolute bottom-4 right-4 flex gap-2">
-        <button className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50">
-          <Zap size={16} className="text-blue-600" />
-        </button>
-        <button className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50">
-          <MapPin size={16} className="text-green-600" />
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-
-
-
 
   return (  
     <DashboardLayout>
@@ -422,10 +525,10 @@ This is a simulated PDF download.
               <div className="mt-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Achievement</span>
-                  <span className="font-semibold">71.3%</span>
+                  <span className="font-semibold">{achievementPercentage.toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '71.3%' }}></div>
+                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${achievementPercentage}%` }}></div>
                 </div>
               </div>
             </div>
@@ -539,15 +642,15 @@ This is a simulated PDF download.
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Installations</span>
-                  <span className="text-xl font-bold text-amber-600">1,200</span>
+                  <span className="text-xl font-bold text-amber-600">{rooftopData.installations.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Capacity</span>
-                  <span className="text-lg font-semibold">18.5 MW</span>
+                  <span className="text-lg font-semibold">{rooftopData.capacity} MW</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Savings</span>
-                  <span className="text-lg font-semibold text-green-600">₹ 32 Cr</span>
+                  <span className="text-lg font-semibold text-green-600">₹ {rooftopData.savings} Cr</span>
                 </div>
               </div>
             </div>
@@ -561,19 +664,19 @@ This is a simulated PDF download.
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Villages Electrified</span>
-                  <span className="text-xl font-bold text-green-600">185</span>
+                  <span className="text-xl font-bold text-green-600">{miniGridsData.villages}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Households</span>
-                  <span className="text-lg font-semibold">4,520</span>
+                  <span className="text-lg font-semibold">{miniGridsData.households.toLocaleString()}</span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Battery Health</span>
-                    <span className="font-semibold">92%</span>
+                    <span className="font-semibold">{miniGridsData.battery}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '92%' }}></div>
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${miniGridsData.battery}%` }}></div>
                   </div>
                 </div>
               </div>
@@ -583,24 +686,43 @@ This is a simulated PDF download.
 
         {/* Right Column - Maps & Additional Info */}
         <div className="space-y-4 md:space-y-6">
-          {/* GIS Map View */}
+          {/* District-wise Energy Distribution */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-4 md:p-6 border border-blue-100 h-64 md:h-80">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <MapPin className="text-blue-600" />
-                GIS Map View
+                <BarChart3 className="text-blue-600" />
+                District Energy Distribution
               </h2>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">44</div>
-                <div className="text-xs text-gray-600">Active Sites</div>
+                <div className="text-2xl font-bold text-blue-600">{districtData.reduce((a, b) => a + b.value, 0).toLocaleString()}</div>
+                <div className="text-xs text-gray-600">Total Units (MW)</div>
               </div>
             </div>
             <div className="h-48 md:h-56">
-              <MapPlaceholder />
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={districtData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e0e7ff" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e0e7ff', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                    {districtData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <div className="mt-3 flex justify-center">
               <div className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium text-sm">
-                YEAR AHEAD - 60+ Sites Planned
+                Top 6 Districts by Installed Capacity
               </div>
             </div>
           </div>
@@ -614,22 +736,22 @@ This is a simulated PDF download.
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Installed Capacity</span>
-                <span className="text-xl font-bold text-orange-600">25 MW</span>
+                <span className="text-xl font-bold text-orange-600">{giridhiData.capacity} MW</span>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Components</span>
-                  <span className="font-semibold">14 / 18</span>
+                  <span className="font-semibold">{giridhiData.components} / 18</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-orange-500 h-2 rounded-full" style={{ width: '78%' }}></div>
+                  <div className="bg-orange-500 h-2 rounded-full" style={{ width: `${(giridhiData.components / 18) * 100}%` }}></div>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Next Milestone</span>
                 <span className="font-semibold text-blue-600 flex items-center gap-1">
                   <Calendar size={16} />
-                  May 2024
+                  {timeRange === 'today' ? 'May 2024' : timeRange === 'week' ? 'Apr 2024' : timeRange === 'month' ? 'Apr 2024' : timeRange === 'quarter' ? 'Mar 2024' : 'Dec 2024'}
                 </span>
               </div>
             </div>
@@ -644,11 +766,11 @@ This is a simulated PDF download.
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Total Capacity</span>
-                <span className="text-xl font-bold text-purple-600">150 MW</span>
+                <span className="text-xl font-bold text-purple-600">{canalTopData.capacity} MW</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Grid Feed-In Today</span>
-                <span className="text-lg font-semibold">720 MWh</span>
+                <span className="text-gray-600">Grid Feed-In {timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}</span>
+                <span className="text-lg font-semibold">{canalTopData.feedIn.toLocaleString()} MWh</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">O&M Status</span>
@@ -665,7 +787,7 @@ This is a simulated PDF download.
       {/* Bottom Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
         {/* District Performance */}
-        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200">
+        {/* <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <BarChart3 className="text-blue-500" />
@@ -691,6 +813,37 @@ This is a simulated PDF download.
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div> */}
+        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <Users className="text-emerald-500" />
+            PM JANMAN Projects
+          </h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Projects Completed</span>
+              <span className="text-2xl font-bold text-emerald-600">{janmanData.projects}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Beneficiaries</span>
+              <span className="text-xl font-semibold">{janmanData.beneficiaries.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Last Inspection</span>
+              <span className="font-semibold flex items-center gap-1">
+                <Calendar size={16} />
+                {timeRange === 'today' ? '12-Apr-2024' : timeRange === 'week' ? '10-Apr-2024' : timeRange === 'month' ? '05-Apr-2024' : timeRange === 'quarter' ? '01-Apr-2024' : '01-Jan-2024'}
+              </span>
+            </div>
+          </div>
+          <div className="mt-6 p-4 bg-emerald-50 rounded-lg">
+            <div className="text-emerald-800 text-sm">
+              <div className="font-semibold mb-1">Impact Summary</div>
+              <div>✓ {Math.round(janmanData.projects * 0.47)} villages covered</div>
+              <div>✓ {Math.round(janmanData.beneficiaries * 0.43)} households benefited</div>
+              <div>✓ 95% satisfaction rate</div>
+            </div>
           </div>
         </div>
 
@@ -756,55 +909,22 @@ This is a simulated PDF download.
       </div>
 
       {/* Bottom Row - PM JANMAN & Grievance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
-        {/* PM JANMAN Projects */}
-        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Users className="text-emerald-500" />
-            PM JANMAN Projects
-          </h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Projects Completed</span>
-              <span className="text-2xl font-bold text-emerald-600">95</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Beneficiaries</span>
-              <span className="text-xl font-semibold">28,700</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Last Inspection</span>
-              <span className="font-semibold flex items-center gap-1">
-                <Calendar size={16} />
-                12-Apr-2024
-              </span>
-            </div>
-          </div>
-          <div className="mt-6 p-4 bg-emerald-50 rounded-lg">
-            <div className="text-emerald-800 text-sm">
-              <div className="font-semibold mb-1">Impact Summary</div>
-              <div>✓ 45 villages covered</div>
-              <div>✓ 12,500 households benefited</div>
-              <div>✓ 95% satisfaction rate</div>
-            </div>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6"> 
         {/* Grievance & Support */}
-        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200 lg:col-span-2">
+        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200 lg:col-span-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
             <h2 className="text-lg font-semibold text-gray-800">Grievance & Support</h2>
             <div className="flex flex-wrap gap-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">18</div>
-                <div className="text-sm text-gray-600">New Today</div>
+                <div className="text-2xl font-bold text-blue-600">{grievanceData.newToday}</div>
+                <div className="text-sm text-gray-600">New {timeRange === 'today' ? 'Today' : timeRange === 'week' ? 'This Week' : timeRange === 'month' ? 'This Month' : timeRange === 'quarter' ? 'This Quarter' : 'This Year'}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-amber-600">45</div>
+                <div className="text-2xl font-bold text-amber-600">{grievanceData.pending}</div>
                 <div className="text-sm text-gray-600">Pending</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">3.5</div>
+                <div className="text-2xl font-bold text-green-600">{grievanceData.avgHours}</div>
                 <div className="text-sm text-gray-600">Avg. Hours</div>
               </div>
             </div>
@@ -828,7 +948,7 @@ This is a simulated PDF download.
                       <div 
                         className="h-2 rounded-full" 
                         style={{ 
-                          width: `${(type.count / 18) * 100}%`,
+                          width: `${(type.count / Math.max(...complaintTypes.map(t => t.count))) * 100}%`,
                           backgroundColor: type.color
                         }}
                       ></div>

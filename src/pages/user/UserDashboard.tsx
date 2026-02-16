@@ -26,7 +26,13 @@ const UserDashboard = () => {
   const navigate = useNavigate();
 
   const devices = user?.devices || [];
-  const tickets = user ? getTicketsByUser(user.id) : [];
+  
+  // Filter out dummy tickets - only show real tickets created by users
+  // Dummy tickets have IDs like "G001", "G002", etc. (not starting with "GRV")
+  const allTickets = user ? getTicketsByUser(user.id) : [];
+  const realTickets = allTickets.filter((ticket) => ticket.grievance_id.startsWith("GRV"));
+  
+  const tickets = realTickets;
 
   const deviceStats = {
     solar_pump: devices.filter((d) => d.type === "solar_pump").length,
@@ -36,9 +42,9 @@ const UserDashboard = () => {
   };
 
   const ticketStats = {
-    total: tickets.length,
-    pending: tickets.filter((t) => t.status === "pending").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
+    total: realTickets.length,
+    pending: realTickets.filter((t) => t.current_status === "pending" || t.current_status === "Open").length,
+    inProgress: realTickets.filter((t) => t.current_status === "in_progress" || t.current_status === "In Progress").length,
   };
 
   const totalPower = devices.reduce((sum, d) => sum + d.currentPower, 0);
@@ -179,30 +185,30 @@ const UserDashboard = () => {
               <div className="space-y-3">
                 {tickets.slice(0, 3).map((ticket) => (
                   <div
-                    key={ticket.id}
+                    key={ticket.grievance_id}
                     className="p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="font-medium text-sm truncate">{ticket.issueDescription.slice(0, 50)}...</p>
+                        <p className="font-medium text-sm truncate">{ticket.category.slice(0, 50)}...</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                           <Clock className="w-3 h-3" />
-                          {ticket.createdAt.split("T")[0]}
+                          {ticket.created_date ? ticket.created_date.split("T")[0] : "-"}
                         </p>
                       </div>
                       <Badge
                         variant="outline"
                         className={
-                          ticket.status === "pending"
+                          ticket.current_status === "pending"
                             ? "bg-warning/10 text-warning border-warning/30"
-                            : ticket.status === "in_progress"
+                            : ticket.current_status === "in_progress"
                             ? "bg-info/10 text-info border-info/30"
-                            : ticket.status === "resolved"
+                            : ticket.current_status === "resolved"
                             ? "bg-success/10 text-success border-success/30"
                             : "bg-muted"
                         }
                       >
-                        {t(ticket.status === "in_progress" ? "inProgress" : ticket.status)}
+                        {t(ticket.current_status === "in_progress" ? "inProgress" : ticket.current_status)}
                       </Badge>
                     </div>
                   </div>

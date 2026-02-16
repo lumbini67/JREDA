@@ -60,20 +60,17 @@ const districts = ["ranchi", "dhanbad", "bokaro", "jamshedpur", "hazaribagh", "g
 const ITEMS_PER_PAGE = 10;
 
 const categories = [
-  "Pump Not Working",
-  "Inverter Error",
-  "Power Fluctuation",
-  "Complete Failure",
-  "Capacity Upgrade Request",
-  "Panel Cleaning Required",
-  "Battery Not Charging",
-  "Wire Damage",
-  "Controller Malfunction",
-  "Sensor Not Working",
-  "Lights Flickering",
-  "Inverter Noise",
-  "Power Outage",
-  "Low Water Discharge",
+  "Solar Pumps",
+  "Mini Grids",
+  "Rooftop Solar",
+  "Solar Water Heater",
+  "Solar Street Light",
+  "Solar High Mast",
+  "PM-KUSUM Scheme (A & C)",
+  "Solar PV Off-Grid Systems",
+  "PM JANMAN",
+  "Giridih Solar City",
+  "Canal-Top Solar Plants",
 ];
 
 const vendors = [
@@ -107,6 +104,7 @@ const AdminGrievances = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Form state with new columns
@@ -127,7 +125,8 @@ const AdminGrievances = () => {
       ticket.farmer_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.pump_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || ticket.current_status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   // Pagination
@@ -182,7 +181,7 @@ const AdminGrievances = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, categoryFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -498,6 +497,17 @@ const AdminGrievances = () => {
             <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
             <SelectItem value="resolved">{t("resolved")}</SelectItem>
             <SelectItem value="closed">{t("closed")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val)}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
