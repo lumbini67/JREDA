@@ -187,6 +187,11 @@ const AdminGrievances = () => {
     e.preventDefault();
     
     try {
+      // Convert date to ISO format for proper storage
+      const expectedDate = formData.expected_resolution_date 
+        ? new Date(formData.expected_resolution_date).toISOString()
+        : "";
+      
       const newTicket = await addTicket({
         farmer_id: formData.farmer_id,
         pump_id: formData.pump_id,
@@ -195,7 +200,7 @@ const AdminGrievances = () => {
         email: "",
         sla_hours: formData.sla_hours,
         assigned_vendor: formData.assigned_vendor,
-        expected_resolution_date: formData.expected_resolution_date,
+        expected_resolution_date: expectedDate,
         escalation_level: formData.escalation_level,
       });
 

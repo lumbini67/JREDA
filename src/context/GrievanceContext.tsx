@@ -14,6 +14,47 @@ import { MachineType } from "./AuthContext";
 // Support both old and new status values from SheetDB
 export type TicketStatus = "pending" | "in_progress" | "resolved" | "closed" | "escalated";
 
+// Utility function to parse different date formats
+export const parseDate = (dateValue: string | number | undefined): string => {
+  if (!dateValue) return "";
+  
+  // If it's a number, it's likely an Excel serial date
+  if (typeof dateValue === 'number') {
+    // Excel serial date: days since 1900-01-01 (with leap year bug)
+    const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+    const date = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
+    return date.toISOString();
+  }
+  
+  const dateStr = String(dateValue).trim();
+  
+  // If it's already a valid ISO date, return as is
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  // Handle dd/mm/yyyy format
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(dateStr)) {
+    const parts = dateStr.split('/');
+    // Assuming dd/mm/yyyy format
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+  }
+  
+  // Try native Date parsing as fallback
+  const date = new Date(dateStr);
+  if (!isNaN(date.getTime())) {
+    return date.toISOString();
+  }
+  
+  return "";
+};
+
 // Category to machine type mapping
 export const categoryToMachineType: Record<string, MachineType> = {
   // Solar Pump categories
@@ -149,7 +190,7 @@ const convertToTicket = (sheetTicket: SheetDBTicket): Ticket => ({
   sla_hours: sheetTicket.sla_hours || 24,
   current_status: mapStatusToTicketStatus(sheetTicket.current_status || sheetTicket.status),
   assigned_vendor: sheetTicket.assigned_vendor || sheetTicket.contractor || "NA",
-  expected_resolution_date: sheetTicket.expected_resolution_date || sheetTicket.dueDate || "",
+  expected_resolution_date: parseDate(sheetTicket.expected_resolution_date || sheetTicket.dueDate),
   escalation_level: sheetTicket.escalation_level || 0,
   updated_date: sheetTicket.updated_date || sheetTicket.updatedAt || "",
 });
