@@ -6,7 +6,7 @@
  *   node scripts/populate-50-tickets.js
  */
 
-const SHEETDB_API_URL = "https://sheetdb.io/api/v1/uj1y32yara8fx";
+const SHEETDB_API_URL = "https://sheetdb.io/api/v1/s1f7oc6clafd4";
 
 const districts = ["Ranchi", "Dhanbad", "Bokaro", "Jamshedpur", "Hazaribagh", "Giridih", "Deoghar", "Dumka"];
 const sites = {

@@ -1,9 +1,9 @@
 /**
  * SheetDB API Service for Ticket/Grievance Data
- * API Endpoint: https://sheetdb.io/api/v1/uj1y32yara8fx
+ * API Endpoint: https://sheetdb.io/api/v1/s1f7oc6clafd4
  */
 
-const SHEETDB_API_URL = "https://sheetdb.io/api/v1/uj1y32yara8fx";
+const SHEETDB_API_URL = "https://sheetdb.io/api/v1/s1f7oc6clafd4";
 
 export interface SheetDBTicket {
   grievance_id: string;
