@@ -126,6 +126,7 @@ export interface Ticket {
   farmer_id: string;
   pump_id: string;
   category: string;
+  issue_summary: string;
   email: string;
   created_date: string;
   sla_hours: number;
@@ -142,6 +143,7 @@ const convertToTicket = (sheetTicket: SheetDBTicket): Ticket => ({
   farmer_id: sheetTicket.farmer_id || sheetTicket.userId || "",
   pump_id: sheetTicket.pump_id || sheetTicket.site || sheetTicket.deviceId || "",
   category: sheetTicket.category || sheetTicket.issueDescription || "",
+  issue_summary: sheetTicket.issue_summary || "",
   email: sheetTicket.email || sheetTicket.userEmail || "",
   created_date: sheetTicket.created_date || sheetTicket.createdAt || "",
   sla_hours: sheetTicket.sla_hours || 24,

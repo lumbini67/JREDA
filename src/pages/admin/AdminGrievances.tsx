@@ -191,6 +191,8 @@ const AdminGrievances = () => {
         farmer_id: formData.farmer_id,
         pump_id: formData.pump_id,
         category: formData.category,
+        issue_summary: "",
+        email: "",
         sla_hours: formData.sla_hours,
         assigned_vendor: formData.assigned_vendor,
         expected_resolution_date: formData.expected_resolution_date,
@@ -650,6 +652,7 @@ const AdminGrievances = () => {
                 <Label>Category</Label>
                 <p className="text-sm mt-1">{selectedTicket.category}</p>
               </div>
+             
               <div>
                 <Label>Current Status</Label>
                 <div className="mt-1">{getStatusBadge(selectedTicket.current_status)}</div>
@@ -673,6 +676,10 @@ const AdminGrievances = () => {
               <div>
                 <Label>Escalation Level</Label>
                 <div className="mt-1">{getEscalationBadge(selectedTicket.escalation_level)}</div>
+              </div>
+               <div>
+                <Label>Issue Summary</Label>
+                <p className="text-sm mt-1">{selectedTicket.issue_summary || "-"}</p>
               </div>
               <div>
                 <Label>Updated Date</Label>

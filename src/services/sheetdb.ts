@@ -10,6 +10,7 @@ export interface SheetDBTicket {
   farmer_id: string;
   pump_id: string;
   category: string;
+  issue_summary: string;
   created_date: string;
   sla_hours: number;
   current_status: string; // Allow any string since SheetDB can return "Open", "In Progress", "Escalated", etc.
@@ -42,6 +43,7 @@ export interface CreateTicketData {
   farmer_id: string;
   pump_id: string;
   category: string;
+  issue_summary?: string;
   email: string;
   sla_hours?: number;
   assigned_vendor?: string;
@@ -117,6 +119,7 @@ export async function createTicket(ticketData: CreateTicketData): Promise<SheetD
       farmer_id: ticketData.farmer_id,
       pump_id: ticketData.pump_id,
       category: ticketData.category,
+      issue_summary: "",
       email: ticketData.email,
       created_date: now,
       sla_hours: ticketData.sla_hours || 24,
@@ -162,6 +165,7 @@ export async function createMultipleTickets(tickets: CreateTicketData[]): Promis
         farmer_id: ticket.farmer_id,
         pump_id: ticket.pump_id,
         category: ticket.category,
+        issue_summary: "",
         email: ticket.email || "",
         created_date: now,
         sla_hours: ticket.sla_hours || 24,
